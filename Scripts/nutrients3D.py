@@ -17,12 +17,12 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 #%% Load data
 
 # iron dust flux
-fein = np.fromfile('../Data/mahowald2009_solubile_current_smooth_oce_mth-2d.bin', '>f4').reshape(12,160,360)
+fein = np.fromfile('/Users/meilers/MITinternship/Data/mahowald2009_solubile_current_smooth_oce_mth-2d.bin', '>f4').reshape(12,160,360)
 
 # model simulation output
-Nutr = xr.open_dataset('/Users/meilers/MITinternship/data/Nutr_tend.0000014400.nc')
+Nutr = xr.open_dataset('/Users/meilers/MITinternship/Data/Nutr_tend.0000014400.nc')
 
-grid = xr.open_dataset('/Users/meilers/MITinternship/data/supply50m.nc')
+grid = xr.open_dataset('/Users/meilers/MITinternship/Data/supply50m.nc')
 
 lon = grid.lon   #needed for plotting
 lat = grid.lat    #needed for plotting
