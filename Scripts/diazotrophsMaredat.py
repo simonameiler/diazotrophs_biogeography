@@ -21,8 +21,6 @@ ds = Dataset('/Users/meilers/MITinternship/Data/MarEDat20130403Diazotrophs.nc', 
 # extract variables which are needed and convert/integrate
 lon = ds.variables['LONGITUDE']
 lat = ds.variables['LATITUDE']
-lon_new = lon[:]
-lat_new = lat[:]
 
 obs = ds.variables['OBSERVATIONS']
 abund = ds.variables['ABUNDANCE']
@@ -141,8 +139,8 @@ ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor
 #c = ax.contourf(lon1,lat1,np.log(nutrient[nut]),levels=levs[nut],cmap=colmap,extend='both')
 #con1 = ax.contour(lon1,lat1,nutrient[nut],levels=[1.2],colors='k',linewidths=1,linstyle='solid')
 #con2 = ax.contour(lon1,lat1,nutrient[nut],levels=[2.5],colors='r',linewidths=1,linstyle='solid')
-plt.plot(lon_new[find1[1]],lat_new[find1[0]],'.',color='b')
-plt.plot(lon_new[find2[1]],lat_new[find2[0]],'.',color='g')
+plt.plot(lon[find1[1]],lat[find1[0]],'.',color='b')
+plt.plot(lon[find2[1]],lat[find2[0]],'.',color='g')
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
 ax.xaxis.set_major_formatter(lon_formatter)
