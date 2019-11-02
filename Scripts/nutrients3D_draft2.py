@@ -252,7 +252,7 @@ nutrient = [bio_PN_tot,bio_PN_trans,bio_PN_remin]
 label_nut = ['N (mol/m$^{2}$/y)','P (mol/m$^{2}$/y)','Fe (mol/m$^{2}$/y)']
 name_nut = ['P:N','transport P:N','remin P:N']
 
-levs_PN = np.linspace(0,1.2,21)
+levs_PN = np.linspace(0.5,1.5,21)
 levs_FeN = np.linspace(-2,3,11)
 levs = [levs_PN,levs_FeN]
 
