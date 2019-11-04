@@ -23,9 +23,28 @@ fein = np.fromfile('/Users/meilers/MITinternship/Data/mahowald2009_solubile_curr
 Nutr = xr.open_dataset('/Users/meilers/MITinternship/Data/Nutr_tend.0000014400.nc')
 
 grid = xr.open_dataset('/Users/meilers/MITinternship/Data/supply50m.nc')
+area_info = xr.open_dataset('/Users/meilers/MITinternship/Data/grid.nc')
 
 lon = grid.lon   #needed for plotting
 lat = grid.lat    #needed for plotting
+
+area = area_info.rA
+
+#%% Load diazotroph data
+ds = Dataset('/Users/meilers/MITinternship/Data/MarEDat20130403Diazotrophs.nc', 'r')
+
+# extract variables which are needed and convert/integrate
+lon_d = ds.variables['LONGITUDE']
+lat_d = ds.variables['LATITUDE']
+
+obs = ds.variables['OBSERVATIONS']
+abund = ds.variables['ABUNDANCE']
+
+obs_int = np.sum(obs[:,0:6,:,:],axis=1)
+abund_int = np.sum(abund[:,0:6,:,:],axis=1)
+
+obs_tot = np.sum(obs_int,axis=0)
+abund_tot = np.sum(abund_int,axis=0)
 
 #%% 
 # transport terms
@@ -157,10 +176,6 @@ f_dust = np.sum(fein,axis=0)*sec # only needed to calculate the Fe remineralizti
                                  # Fe_other contains dust. If we need Fe remin only: subtract dust
 Fe_remin = Fe_other-f_dust
 
-N_alt = np.add(N_int,N_int_o)
-P_alt = np.add(PO4_int,S_PO4_int)
-Fe_alt = np.add(FeT_int,FeT_int)#,f_dust) #including dust
-
 N_tot = np.add(N_trans,N_remin)
 P_tot = np.add(P_trans,P_remin)
 Fe_tot = np.add(Fe_trans,Fe_other)#,f_dust) #including dust
@@ -177,16 +192,8 @@ rpP = 0.0625
 rpFe = 6.25e-5
 k = 0.1
 
-#def div(x,y):
-#    if y == 0:
-#        return y
-#    return x / y
-
 bio_PN_tot = (np.divide(P_tot,N_tot))*(1/rpP)
 bio_FeN_tot = (np.divide(Fe_tot,N_tot))*(1/rpFe)
-
-bio_PN_alt = (np.divide(P_alt,N_alt))*(1/rpP)
-bio_FeN_alt = (np.divide(Fe_alt,N_alt))*(1/rpFe)
 
 bio_PN_trans = (np.divide(P_trans,N_trans))*(1/rpP)
 F = np.add((Fe_trans*k),f_dust*100)
@@ -195,6 +202,68 @@ bio_FeN_trans = (np.divide(F,(N_trans*k)))*(1/rpFe)
 bio_PN_remin = (np.divide(P_remin,N_remin))*(1/rpP)
 bio_FeN_remin = (np.divide(Fe_remin,N_remin))*(1/rpFe)
 
+#%% Calculate differences in area for P:N of 0.99 to 1.04 - or any other value
+ref_PN = 1.04 # choose the reference value for the P:N ratio here (Ward et al. is 1.04)
+ref_FeN = 1.2
+new_PN = 0.99 # choose the new ratio for the comparison here
+new_FeN = 2.5
+
+PN_area_ref = np.zeros((len(lat),len(lon)))
+PN_bool_ref = np.where(bio_PN_tot[:,:] > ref_PN, 1, 0)
+PN_A_ref = np.nansum(PN_bool_ref[:,:]*area,axis=(0,1))
+
+
+PN_area_new = np.zeros_like(PN_area_ref)
+PN_bool_new = np.where(bio_PN_tot[:,:] > new_PN, 1, 0)
+PN_A_new = np.nansum(PN_bool_new[:,:]*area,axis=(0,1))
+
+change = (PN_A_ref-PN_A_new)/PN_A_ref
+
+#%% Calculate area elementwise --> yields same result as from section above
+
+PN_A_r = np.zeros((160,360))
+for i in range(len(lat)):
+    for j in range(len(lon)):
+        PN_A_r[i,j] = PN_bool_ref[i,j]*area[i,j]
+PN_tot_r = np.sum(PN_A_r)    
+
+PN_A_n = np.zeros((160,360))
+for i in range(len(lat)):
+    for j in range(len(lon)):
+        PN_A_n[i,j] = PN_bool_new[i,j]*area[i,j]
+PN_tot_n = np.sum(PN_A_n)
+
+change2 = (PN_tot_r-PN_tot_n)/PN_tot_r
+
+#%% Manipulate diazotroph data
+
+# Create a mask of the provinces where diazotrophs are predicted from nutrient ratios        
+diaz_obs = np.zeros_like(obs_tot)
+diaz_obs[obs_tot>0] = 1
+
+diaz_abund = np.zeros_like(abund_tot)
+diaz_abund[diaz_abund>0] = 1
+
+find_obs = np.where(diaz_obs==1)
+find_abund = np.where(diaz_abund==1)
+
+PN_d = np.zeros((len(lat_d),len(lon_d)))
+PN_d_bool = np.where(bio_PN_tot[:,:] > ref_PN, 1, 0)
+
+FeN_d = np.zeros((len(lat_d),len(lon_d)))
+FeN_d_bool = np.where(bio_FeN_tot[:,:] > ref_FeN, 1, 0)
+
+# mask where P:N OR Fe:N is sufficient to support diazotrophs
+mask = np.where((bio_FeN_tot[:,:] > ref_FeN) | (bio_PN_tot[:,:] > ref_PN), 1, 0)
+
+#%% Quantify how many of the diazotrophs abundances are in the predicted province
+# careful: make sure to get lon/lat of nutrients and diazotrophs consistent!!!
+#IN = mask[find_abund]
+
+# gives fraction of abundances that are within the predicted province
+IN = np.sum(mask[find_abund[0][:],find_abund[1][:]])/len(find_abund[1][:])
+
+
 #%% just a plot to quickly display variables
 
 colmap = plt.get_cmap('RdBu_r')
@@ -202,7 +271,7 @@ colmap = plt.get_cmap('RdBu_r')
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
 ax.coastlines(color='#888888',linewidth=1.5)
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-c = ax.contourf(lon,lat,Fe_trans,levels=np.linspace(0,1,11),cmap=colmap,extend='max')
+c = ax.contourf(lon,lat,PN_bool_ref,levels=np.linspace(0,1,11),cmap=colmap,extend='max')
 #con = ax.contour(lon,lat,mask,color='r')
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
@@ -233,6 +302,8 @@ ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor
 c = ax.contourf(lon,lat,np.log(nutr[nu]),levels=levs[nu],cmap=colmap,extend='both')
 con1 = ax.contour(lon,lat,nutr[nu],levels=[1.2],colors='k',linewidths=1,linstyle='solid')
 con2 = ax.contour(lon,lat,nutr[nu],levels=[2.5],colors='r',linewidths=1,linstyle='solid')
+plt.plot(lon_d[find_obs[1]],lat_d[find_obs[0]],'.',color='b')
+plt.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='g')
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
 ax.xaxis.set_major_formatter(lon_formatter)
@@ -262,7 +333,7 @@ fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitud
 ax.coastlines(color='#888888',linewidth=1.5)
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
 c = ax.contourf(lon,lat,nutrient[nut],levels=levs[nut],cmap=colmap,extend='both')
-#con1 = ax.contour(lon,lat,nutrient[nut],levels=[0.99],colors='purple',linewidths=1,linstyle='solid')
+con1 = ax.contour(lon,lat,nutrient[nut],levels=[0.99],colors='purple',linewidths=1,linstyle='solid')
 con2 = ax.contour(lon,lat,nutrient[nut],levels=[1.04],colors='r',linewidths=1,linstyle='solid')
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
