@@ -291,12 +291,12 @@ diaz_data_list = [find_obs,find_abund,find_bm,find_nifH,find_nz_obs,find_nz_abun
 #absence = np.where(find_obs[0][:] != find_nz_obs[0][:])
 
 #maybe write a loop?
-absence = np.zeros_like(obs_tot)
-for i in range(len(find_obs[0])):
-    if find_obs[0][i] == find_nz_obs[0][i]:
-        absence[0,i] = 0
-    else:
-        absence[0,i] = 1
+#absence = np.zeros_like(obs_tot)
+#for i in range(len(find_obs[0])):
+#    if find_obs[0][i] == find_nz_obs[0][i]:
+#        absence[0,i] = 0
+#    else:
+#        absence[0,i] = 1
 #%% Quantify how many of the diazotrophs abundances are in the predicted province
 # careful: make sure to get lon/lat of nutrients and diazotrophs consistent!!!
 # correct the two scales of latitude to match one another. (lon would be the same but to avoid confusion
