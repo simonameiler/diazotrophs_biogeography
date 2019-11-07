@@ -30,32 +30,32 @@ lat = grid.lat    #needed for plotting
 
 area = area_info.rA
 
-#%% Load diazotroph data
-ds = Dataset('/Users/meilers/MITinternship/Data/MarEDat20130403Diazotrophs.nc', 'r')
+#%% Load and condense diazotroph data
+ds = xr.open_dataset('/Users/meilers/MITinternship/Data/MarEDat20130403Diazotrophs.nc',decode_times=False)
 
 # extract variables which are needed and convert/integrate
-lon_d = ds.variables['LONGITUDE']
-lat_d = ds.variables['LATITUDE']
+lon_d = ds['LONGITUDE']
+lat_d = ds['LATITUDE'][10:-10] # to match the latitude of the nutrient data
 
-obs = ds.variables['OBSERVATIONS']
-abund = ds.variables['ABUNDANCE']
-bm = ds.variables['BIOMASS']
-nifH = ds.variables['nifHbiom']
-nz_obs = ds.variables['NON_ZERO_OBS']
-nz_abund = ds.variables['NON_ZERO_ABUND']
-nz_bm = ds.variables['NON_ZERO_BIOM']
-nz_nifH = ds.variables['NON_ZERO_nifH']
+obs = ds['OBSERVATIONS']
+abund = ds['ABUNDANCE']
+bm = ds['BIOMASS']
+nifH = ds['nifHbiom']
+nz_obs = ds['NON_ZERO_OBS']
+nz_abund = ds['NON_ZERO_ABUND']
+nz_bm = ds['NON_ZERO_BIOM']
+nz_nifH = ds['NON_ZERO_nifH']
 
-obs_tot = np.sum(obs[:,0:6,:,:],axis=(0,1))
-abund_tot = np.sum(abund[:,0:6,:,:],axis=(0,1))
-bm_tot = np.sum(bm[:,0:6,:,:],axis=(0,1))
-nifH_tot = np.sum(nifH[:,0:6,:,:],axis=(0,1))
-nz_obs_tot = np.sum(nz_obs[:,0:6,:,:],axis=(0,1))
-nz_abund_tot = np.sum(nz_abund[:,0:6,:,:],axis=(0,1))
-nz_bm_tot = np.sum(nz_bm[:,0:6,:,:],axis=(0,1))
-nz_nifH_tot = np.sum(nz_nifH[:,0:6,:,:],axis=(0,1))
+obs_tot = np.sum(obs[:,0:6,10:-10,:],axis=(0,1))
+abund_tot = np.sum(abund[:,0:6,10:-10,:],axis=(0,1))
+bm_tot = np.sum(bm[:,0:6,10:-10,:],axis=(0,1))
+nifH_tot = np.sum(nifH[:,0:6,10:-10,:],axis=(0,1))
+nz_obs_tot = np.sum(nz_obs[:,0:6,10:-10,:],axis=(0,1))
+nz_abund_tot = np.sum(nz_abund[:,0:6,10:-10,:],axis=(0,1))
+nz_bm_tot = np.sum(nz_bm[:,0:6,10:-10,:],axis=(0,1))
+nz_nifH_tot = np.sum(nz_nifH[:,0:6,10:-10,:],axis=(0,1))
 
-#%% 
+#%% Load and condense nutrient data
 # transport terms
 NH4 = Nutr['gTr02']
 NO2 = Nutr['gTr03']
@@ -88,8 +88,8 @@ dz = [10,10,15,20,20,25] #,35,50,75,100] #(...) dz between two depth layers
 NH4_int = np.zeros((6,160,360))
 for i in range(len(dz)):
     NH4_int[i,:,:] = NH4[i,:,:]*dz[i]*sec
-    print(np.max(NH4_int[i,:,:]))
-    print(i)
+#    print(np.max(NH4_int[i,:,:]))
+#    print(i)
 NH4_int = np.sum(NH4_int,axis=0)
 
 NO2_int = np.zeros((6,160,360))
@@ -140,44 +140,6 @@ Fe_trans = deepcopy(FeT_int)
 N_remin = deepcopy(N_int_o)
 P_remin = deepcopy(S_PO4_int)
 Fe_other = deepcopy(S_Fe_int)
-
-#%% Set all negative values to zero - for all nutrients
-## loop over depths and over latitude
-#for i in range(len(lat)):
-#    N_trans[i,:][N_int[i,:]<0]=10e-08
-#    print(np.min(N_trans[i,:]))
-#    
-#print(np.min(N_trans[:,:]))
-#
-#for i in range(len(lat)):
-#    P_trans[i,:][PO4_int[i,:]<0]=10e-08
-#    print(np.min(P_trans[i,:]))
-#    
-#print(np.min(P_trans[:,:]))
-#
-#for i in range(len(lat)):
-#    Fe_trans[i,:][FeT_int[i,:]<0]=10e-08
-#    print(np.min(Fe_trans[i,:]))
-#    
-#print(np.min(Fe_trans[:,:]))
-#   
-#for i in range(len(lat)):
-#    N_remin[i,:][N_int_o[i,:]<0]=10e-08
-#    print(np.min(N_remin[i,:]))
-#    
-#print(np.min(N_remin[:,:]))
-#   
-#for i in range(len(lat)):
-#    P_remin[i,:][S_PO4_int[i,:]<0]=10e-08
-#    print(np.min(P_remin[i,:]))
-#    
-#print(np.min(P_remin[:,:]))
-#    
-#for i in range(len(lat)):
-#    Fe_other[i,:][S_Fe_int[i,:]<0]=10e-08
-#    print(np.min(Fe_other[i,:]))
-#        
-#print(np.min(Fe_other[:,:]))
   
 #%% Define transport, remin and total nutrient fluxes; add iron flux
 
@@ -220,7 +182,6 @@ new_FeN = 2.5
 PN_area_ref = np.zeros((len(lat),len(lon)))
 PN_bool_ref = np.where(bio_PN_tot[:,:] > ref_PN, 1, 0)
 PN_A_ref = np.nansum(PN_bool_ref[:,:]*area,axis=(0,1))
-
 
 PN_area_new = np.zeros_like(PN_area_ref)
 PN_bool_new = np.where(bio_PN_tot[:,:] > new_PN, 1, 0)
@@ -297,19 +258,22 @@ diaz_data_list = [find_obs,find_abund,find_bm,find_nifH,find_nz_obs,find_nz_abun
 #        absence[0,i] = 0
 #    else:
 #        absence[0,i] = 1
+
+    
 #%% Quantify how many of the diazotrophs abundances are in the predicted province
 # careful: make sure to get lon/lat of nutrients and diazotrophs consistent!!!
 # correct the two scales of latitude to match one another. (lon would be the same but to avoid confusion
 # I converted it too.) All we care about here is getting the right indices matching the lon, lat of both,
 # diazotroph and nutrient data. 
-list_idx = 5 #to chose which data from diaz_data_list to plot
+list_idx = 1 #to chose which data from diaz_data_list to plot
 
-lat_corr = diaz_data_list[list_idx][0]-10
-lon_corr = diaz_data_list[list_idx][1]
+lat_corr = diaz_data_list[list_idx][0]
+#lon_corr = diaz_data_list[list_idx][1]-180 #would also work...the option with %360 is nicer though
+lon_corr = (diaz_data_list[list_idx][1]-180)%360
 # gives fraction of abundances that are within the predicted province
 IN = np.sum(mask[lat_corr,lon_corr])/len(lat_corr)
 print(IN)
-
+    
 #%% just a plot to quickly display variables
 
 col = plt.get_cmap('RdBu_r')
@@ -317,8 +281,17 @@ col = plt.get_cmap('RdBu_r')
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
 ax.coastlines(color='#888888',linewidth=1.5)
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-c = ax.contourf(lon,lat,mask,levels=np.linspace(0,1,30),cmap=col)#,extend='both')
-#con = ax.contour(lon,lat,mask,color='r')
+c = ax.contourf(lon,lat,mask,levels=np.linspace(-1,2,20),cmap=col)#,extend='both')
+#plt.plot(listi[1],listi[0],'.',color='m')
+#plt.plot(pz_d[0],pz_d[1],'.',color='g')
+#plt.plot(lon_d[find_obs[1]],lat_d[find_obs[0]],'.',color='b')
+plt.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='g')
+#plt.plot(lon_d[find_bm[1]],lat_d[find_bm[0]],'.',color='r')
+#plt.plot(lon_d[find_nifH[1]],lat_d[find_nifH[0]],'.',color='c')
+#plt.plot(lon_d[find_nz_obs[1]],lat_d[find_nz_obs[0]],'.',color='m')
+#plt.plot(lon_d[find_nz_abund[1]],lat_d[find_nz_abund[0]],'.',color='orange')
+#plt.plot(lon_d[find_nz_bm[1]],lat_d[find_nz_bm[0]],'.',color='k')
+#plt.plot(lon_d[find_nz_nifH[1]],lat_d[find_nz_nifH[0]],'.',color='w')
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
 ax.xaxis.set_major_formatter(lon_formatter)

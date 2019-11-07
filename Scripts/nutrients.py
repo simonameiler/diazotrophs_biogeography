@@ -215,6 +215,7 @@ plt.colorbar(c0,ax=ax[0],orientation='vertical')
 plt.colorbar(c1,ax=ax[1],orientation='vertical')
 plt.colorbar(c2,ax=ax[2],orientation='vertical')
 #fig.subplots_adjust(right=0.85)
+
 #cb = fig.add_axes([0.9,0.25,0.01,0.5])
 #fig.colorbar(c0,cax=cb,label='Depth (m)')
 #cb.set_label('[m]',rotation=90, position=(0.5,1))
