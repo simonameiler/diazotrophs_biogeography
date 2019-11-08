@@ -162,6 +162,8 @@ Fe_tot = np.add(Fe_trans,Fe_other)#,f_dust) #including dust
 rpP = 0.0625
 rpFe = 6.25e-5
 k = 0.1
+ref_PN = 1.04
+ref_FeN = 1.2
 
 bio_PN_tot = (np.divide(P_tot,N_tot))*(1/rpP)
 bio_FeN_tot = (np.divide(Fe_tot,N_tot))*(1/rpFe)
@@ -173,40 +175,8 @@ bio_FeN_trans = (np.divide(F,(N_trans*k)))*(1/rpFe)
 bio_PN_remin = (np.divide(P_remin,N_remin))*(1/rpP)
 bio_FeN_remin = (np.divide(Fe_remin,N_remin))*(1/rpFe)
 
-#%% Calculate differences in area for P:N of 0.99 to 1.04 - or any other value
-ref_PN = 1.04 # choose the reference value for the P:N ratio here (Ward et al. is 1.04)
-ref_FeN = 1.2
-new_PN = 0.99 # choose the new ratio for the comparison here
-new_FeN = 2.5
-
-PN_area_ref = np.zeros((len(lat),len(lon)))
-PN_bool_ref = np.where(bio_PN_tot[:,:] > ref_PN, 1, 0)
-PN_A_ref = np.nansum(PN_bool_ref[:,:]*area,axis=(0,1))
-
-PN_area_new = np.zeros_like(PN_area_ref)
-PN_bool_new = np.where(bio_PN_tot[:,:] > new_PN, 1, 0)
-PN_A_new = np.nansum(PN_bool_new[:,:]*area,axis=(0,1))
-
-change = (PN_A_ref-PN_A_new)/PN_A_ref
-
 #%% mask where P:N OR Fe:N is sufficient to support diazotrophs
 mask = np.where((bio_FeN_tot[:,:] > ref_FeN) & (bio_PN_tot[:,:] > ref_PN), 1, 0)
-
-#%% Calculate area elementwise --> yields same result as from section above
-
-#PN_A_r = np.zeros((160,360))
-#for i in range(len(lat)):
-#    for j in range(len(lon)):
-#        PN_A_r[i,j] = PN_bool_ref[i,j]*area[i,j]
-#PN_tot_r = np.sum(PN_A_r)    
-#
-#PN_A_n = np.zeros((160,360))
-#for i in range(len(lat)):
-#    for j in range(len(lon)):
-#        PN_A_n[i,j] = PN_bool_new[i,j]*area[i,j]
-#PN_tot_n = np.sum(PN_A_n)
-#
-#change2 = (PN_tot_r-PN_tot_n)/PN_tot_r
 
 #%% Manipulate diazotroph data
 
@@ -247,19 +217,6 @@ find_nz_nifH = np.where(diaz_nz_nifH==1)
 #pack the masks for the different diazotroph variables into one list
 diaz_data_list = [find_obs,find_abund,find_bm,find_nifH,find_nz_obs,find_nz_abund,find_nz_bm,find_nz_nifH]
 
-#%% Calculate absences --> meaning obs - nz_obs
-#absences = np.where(find_obs[0]==1 & find_nz_obs[0]==0)
-#absence = np.where(find_obs[0][:] != find_nz_obs[0][:])
-
-#maybe write a loop?
-#absence = np.zeros_like(obs_tot)
-#for i in range(len(find_obs[0])):
-#    if find_obs[0][i] == find_nz_obs[0][i]:
-#        absence[0,i] = 0
-#    else:
-#        absence[0,i] = 1
-
-    
 #%% Quantify how many of the diazotrophs abundances are in the predicted province
 # careful: make sure to get lon/lat of nutrients and diazotrophs consistent!!!
 # correct the two scales of latitude to match one another. (lon would be the same but to avoid confusion
@@ -273,6 +230,209 @@ lon_corr = (diaz_data_list[list_idx][1]-180)%360
 # gives fraction of abundances that are within the predicted province
 IN = np.sum(mask[lat_corr,lon_corr])/len(lat_corr)
 print(IN)
+
+#%% Calculate differences in area for P:N of 0.99 to 1.04 - or any other value
+new_PN = 1.00 # choose the new ratio for the comparison here
+
+PN_area_ref = np.zeros((len(lat),len(lon)))
+PN_bool_ref = np.where(bio_PN_tot[:,:] > ref_PN, 1, 0)
+PN_A_ref = np.nansum(PN_bool_ref[:,:]*area,axis=(0,1))
+
+PN_area_new = np.zeros_like(PN_area_ref)
+PN_bool_new = np.where(bio_PN_tot[:,:] > new_PN, 1, 0)
+PN_A_new = np.nansum(PN_bool_new[:,:]*area,axis=(0,1))
+
+change_PN = (PN_A_ref-PN_A_new)/PN_A_ref
+print(change_PN)
+
+#%% Calculate differences in area for Fe:N of different values
+new_FeN = 1.0
+
+FeN_area_ref = np.zeros((len(lat),len(lon)))
+FeN_bool_ref = np.where(bio_FeN_tot[:,:] > ref_FeN, 1, 0)
+FeN_A_ref = np.nansum(FeN_bool_ref[:,:]*area,axis=(0,1))
+
+FeN_area_new = np.zeros_like(FeN_area_ref)
+FeN_bool_new = np.where(bio_FeN_tot[:,:] > new_FeN, 1, 0)
+FeN_A_new = np.nansum(PN_bool_new[:,:]*area,axis=(0,1))
+
+change_FeN = (FeN_A_ref-FeN_A_new)/FeN_A_ref
+print(change_FeN)
+
+#%% create masks for the altered P:N and Fe:N ratios to calculate the accuracy of correctly
+# predicted points
+mask_PN = np.where((bio_FeN_tot[:,:] > ref_FeN) & (bio_PN_tot[:,:] > new_PN), 1, 0) #keep Fe:N constant while varying P:N
+mask_FeN = np.where((bio_FeN_tot[:,:] > new_FeN) & (bio_PN_tot[:,:] > ref_PN), 1, 0) #keep P:N constant while varying Fe:N
+
+#%% calculate accuracy of prediction
+list_idx = 1 #to chose which data from diaz_data_list to plot
+# gives fraction of abundances that are within the predicted province
+IN_PN = np.sum(mask_PN[lat_corr,lon_corr])/len(lat_corr)
+IN_FeN = np.sum(mask_FeN[lat_corr,lon_corr])/len(lat_corr)
+print(IN_PN)
+print(IN_FeN)
+
+acc_change_PN = (IN-IN_PN)/IN_PN
+acc_change_FeN = (IN-IN_FeN)/IN_FeN
+print(acc_change_PN)
+print(acc_change_FeN)
+
+#%% Create loop to vary P:N and Fe:N values and extract area and accuracy
+# idea: plot P:N and Fe:N vs. area and accuracy
+
+#P:N
+new_PN = np.arange(0.5,1.5,0.01) # choose the new ratio for the comparison here
+
+area_PN_var = np.zeros(len(new_PN))
+change_PN_var = np.zeros_like(area_PN_var)
+IN_PN_var = np.zeros_like(area_PN_var)
+acc_PN_var = np.zeros_like(area_PN_var)
+
+for i in range(len(new_PN)):
+    PN_bool_new = np.where(bio_PN_tot[:,:] > new_PN[i], 1, 0)
+    area_PN_var[i] = np.nansum(PN_bool_new[:,:]*area,axis=(0,1))
+    change_PN_var[i] = (PN_A_ref-area_PN_var[i])/PN_A_ref
+    #print(change_PN)
+    mask_PN = np.where((bio_FeN_tot[:,:] > ref_FeN) & (bio_PN_tot[:,:] > new_PN[i]), 1, 0)
+    IN_PN_var[i] = np.sum(mask_PN[lat_corr,lon_corr])/len(lat_corr)
+    #print(IN_PN_var[i])
+    acc_PN_var[i] = (IN-IN_PN_var[i])/IN_PN_var[i]
+    #print(acc_PN_var[i])
+    
+#%% Create loop to vary P:N and Fe:N values and extract area and accuracy
+# idea: plot P:N and Fe:N vs. area and accuracy
+
+#Fe:N
+new_FeN = np.arange(0.5,1.5,0.01) # choose the new ratio for the comparison here
+
+area_FeN_var = np.zeros(len(new_FeN))
+change_FeN_var = np.zeros_like(area_FeN_var)
+IN_FeN_var = np.zeros_like(area_FeN_var)
+acc_FeN_var = np.zeros_like(area_FeN_var)
+
+for i in range(len(new_FeN)):
+    FeN_bool_new = np.where(bio_FeN_tot[:,:] > new_FeN[i], 1, 0)
+    area_FeN_var[i] = np.nansum(FeN_bool_new[:,:]*area,axis=(0,1))
+    change_FeN_var[i] = (FeN_A_ref-area_FeN_var[i])/FeN_A_ref
+    #print(change_FeN)
+    mask_FeN = np.where((bio_FeN_tot[:,:] > ref_FeN) & (bio_FeN_tot[:,:] > new_FeN[i]), 1, 0)
+    IN_FeN_var[i] = np.sum(mask_FeN[lat_corr,lon_corr])/len(lat_corr)
+    #print(IN_FeN_var[i])
+    acc_FeN_var[i] = (IN-IN_FeN_var[i])/IN_FeN_var[i]
+    #print(acc_FeN_var[i])
+
+#%% Vary both phi values at the same time
+#Create loop to vary P:N and Fe:N values and extract area and accuracy
+# idea: plot P:N and Fe:N vs. area and accuracy
+
+
+#Fe:N
+new_FeN = np.arange(0.5,1.5,0.01) # choose the new ratio for the comparison here
+new_PN = np.arange(0.5,1.5,0.01)
+
+area_var = np.zeros((len(new_FeN),len(new_PN)))
+IN_var = np.zeros_like(area_var)
+
+for i in range(len(new_FeN)):
+    for j in range(len(new_PN)):
+        #bool_new[i,j] = np.where(bio_FeN_tot[:,:] > new_FeN[i], 1, 0)
+        mask_both = np.where((bio_FeN_tot[:,:] > new_FeN[i]) & (bio_PN_tot[:,:] > new_PN[j]), 1, 0)
+        area_var[i,j] = np.nansum(mask_both[:,:]*area,axis=(0,1))
+        IN_var[i,j] = np.sum(mask_both[lat_corr,lon_corr])/len(lat_corr)
+
+#%%
+fig,ax = plt.subplots(figsize=(12,6))
+ax.imshow(new_FeN, new_PN, IN_var)
+
+#%% Plot the differences in area and phi values
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import numpy as np
+
+fig = plt.figure(figsize=(12,8))
+ax = fig.gca(projection='3d')
+# Plot the surface.
+surf = ax.plot_surface(new_FeN, new_PN, IN_var[:,:])#, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+
+def randrange(n, vmin, vmax):
+    '''
+    Helper function to make an array of random numbers having shape (n, )
+    with each number distributed Uniform(vmin, vmax).
+    '''
+    return (vmax - vmin)*np.random.rand(n) + vmin
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+n = 100
+
+# For each set of style and range settings, plot n random points in the box
+# defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
+for c, m, zlow, zhigh in [('r', 'o', -50, -25), ('b', '^', -30, -5)]:
+    xs = randrange(n, 23, 32)
+    ys = randrange(n, 0, 100)
+    zs = randrange(n, zlow, zhigh)
+    ax.scatter(xs, ys, zs, c=c, marker=m)
+
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
+
+plt.show()
+
+#%% plot the results for this variation of supply ratios
+fig,ax = plt.subplots(2,2,sharex=True,figsize=(9,6))
+ax[0,0].plot(new_FeN[:],area_FeN_var[:],color='C0',linewidth=1.5)#,label='total area')
+ax[1,0].plot(new_FeN[:],IN_FeN_var[:],color='C1',linewidth=1.5)#,label='22 mmol m$^{-3}$') 
+ax[0,1].plot(new_PN[:],area_PN_var[:],color='C1',linewidth=1.5)#,label='22 mmol m$^{-3}$') 
+ax[1,1].plot(new_PN[:],IN_PN_var[:],color='C2',linewidth=1.5)#,label='5 mmol m$^{-3}$') 
+ax[1,0].set_xlabel('Fe:N',labelpad=10)
+ax[1,1].set_xlabel('P:N',labelpad=10)
+ax[0,0].set_ylabel('Area',labelpad=10)
+ax[1,0].set_ylabel('Accuracy',labelpad=10)
+#ax[0].set_yticks([0,4])
+#ax[1].set_yticks([0,1.5])
+#ax[2].set_yticks([0,0.2])
+#ax[0].set_ylim(0,8)
+#ax[1].set_ylim(0,3)
+#ax[2].set_ylim(0,0.4)
+#plt.suptitle('a)',x=0.08,y=0.95)
+#plt.subplots_adjust(hspace=0)
+plt.show()
+
+#%% plot the results for this variation of supply ratios
+fig,ax = plt.subplots(1,2,sharex=True,figsize=(9,3))
+p1 = ax[0].plot(new_FeN[:],area_FeN_var[:],color='C0',linewidth=1.5,label='varying Fe:N')
+p2 = ax[1].plot(new_FeN[:],IN_FeN_var[:],color='C0',linewidth=1.5,label='varying Fe:N') 
+ax[0].plot(new_PN[:],area_PN_var[:],color='C1',linewidth=1.5,label='varying P:N')
+ax[1].plot(new_PN[:],IN_PN_var[:],color='C1',linewidth=1.5,label='varying P:N')
+ax[0].legend(loc='lower left')
+ax[1].legend(loc='lower left')
+ax[0].set_xlabel('Fe:N, P:N')
+ax[0].set_ylabel('Area')
+ax[1].set_ylabel('Accuracy')
+
+plt.show()
+
+# thoughts on this:
+# why don't we get an accuracy of 100% with very small phi? --> because the total area
+# is calculated for Fe:N & P:N. Thus, at some point the area does not get bigger and the
+# accuracy not higher because the other nutrient is limiting (the one that's kept constant)
+# --> vary both nutrients at the same time
+
+#%% Calculate absences --> meaning obs - nz_obs
+#absences = np.where(find_obs[0]==1 & find_nz_obs[0]==0)
+#absence = np.where(find_obs[0][:] != find_nz_obs[0][:])
+
+#maybe write a loop?
+#absence = np.zeros_like(obs_tot)
+#for i in range(len(find_obs[0])):
+#    if find_obs[0][i] == find_nz_obs[0][i]:
+#        absence[0,i] = 0
+#    else:
+#        absence[0,i] = 1
     
 #%% just a plot to quickly display variables
 
@@ -281,7 +441,7 @@ col = plt.get_cmap('RdBu_r')
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
 ax.coastlines(color='#888888',linewidth=1.5)
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-c = ax.contourf(lon,lat,mask,levels=np.linspace(-1,2,20),cmap=col)#,extend='both')
+c = ax.contourf(lon,lat,mask_PN,levels=np.linspace(-1,2,20),cmap=col)#,extend='both')
 #plt.plot(listi[1],listi[0],'.',color='m')
 #plt.plot(pz_d[0],pz_d[1],'.',color='g')
 #plt.plot(lon_d[find_obs[1]],lat_d[find_obs[0]],'.',color='b')
@@ -372,3 +532,19 @@ cbar = plt.colorbar(c,ax=ax)
 cbar.set_label(''+str(name_nut[nut])+'',rotation=90, position=(0.5,0.5))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/overview_nutr_bioav_'+str(name_nut[nut])+'_104.png', bbox_inches='tight', dpi=300)
+
+#%% Calculate area elementwise --> yields same result as from section above
+
+#PN_A_r = np.zeros((160,360))
+#for i in range(len(lat)):
+#    for j in range(len(lon)):
+#        PN_A_r[i,j] = PN_bool_ref[i,j]*area[i,j]
+#PN_tot_r = np.sum(PN_A_r)    
+#
+#PN_A_n = np.zeros((160,360))
+#for i in range(len(lat)):
+#    for j in range(len(lon)):
+#        PN_A_n[i,j] = PN_bool_new[i,j]*area[i,j]
+#PN_tot_n = np.sum(PN_A_n)
+#
+#change2 = (PN_tot_r-PN_tot_n)/PN_tot_r
