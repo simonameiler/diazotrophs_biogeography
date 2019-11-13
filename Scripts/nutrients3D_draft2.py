@@ -340,46 +340,35 @@ for i in range(len(new_FeN)):
         area_var[i,j] = np.nansum(mask_both[:,:]*area,axis=(0,1))
         IN_var[i,j] = np.sum(mask_both[lat_corr,lon_corr])/len(lat_corr)
 
-#%%
-fig,ax = plt.subplots(figsize=(12,6))
-ax.imshow(new_FeN, new_PN, IN_var)
+#%% plot the phi values vs. the area and accuracy for diazotroph co-existence
 
-#%% Plot the differences in area and phi values
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import numpy as np
+fig,ax = plt.subplots(1,2,figsize=(9,4),sharey=True)
+c0 = ax[0].contourf(new_PN, new_FeN, area_var,cmap=cm.cm.haline,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
+c1 = ax[1].contourf(new_PN, new_FeN, IN_var,cmap=cm.cm.haline,levels=np.linspace(0,1,11))
+for i in range(0,2):
+    ax[i].axhline(ref_FeN,linewidth=1.0,linestyle='dashed',color='w')
+    ax[i].axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+    ax[i].set_xlabel('P:N')
+    ax[i].set_ylabel('Fe:N')
+ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+ax[1].text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+cbar0 = plt.colorbar(c0,ax=ax[0])
+cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
+cbar1 = plt.colorbar(c1,ax=ax[1])
+cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
+plt.show()
+fig.savefig('/Users/meilers/MITinternship/Plots/phi_vs_area_accuracy.png', bbox_inches='tight', dpi=300)
 
-fig = plt.figure(figsize=(12,8))
-ax = fig.gca(projection='3d')
-# Plot the surface.
-surf = ax.plot_surface(new_FeN, new_PN, IN_var[:,:])#, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#%% plot just area or accuracy
 
-def randrange(n, vmin, vmax):
-    '''
-    Helper function to make an array of random numbers having shape (n, )
-    with each number distributed Uniform(vmin, vmax).
-    '''
-    return (vmax - vmin)*np.random.rand(n) + vmin
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-n = 100
-
-# For each set of style and range settings, plot n random points in the box
-# defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
-for c, m, zlow, zhigh in [('r', 'o', -50, -25), ('b', '^', -30, -5)]:
-    xs = randrange(n, 23, 32)
-    ys = randrange(n, 0, 100)
-    zs = randrange(n, zlow, zhigh)
-    ax.scatter(xs, ys, zs, c=c, marker=m)
-
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
-
+fig,ax = plt.subplots(figsize=(5,4))
+c = ax.contourf(new_PN, new_FeN, IN_var,cmap=cm.cm.haline,levels=np.linspace(0,1,11))
+ax.axhline(ref_FeN,linewidth=1.0,linestyle='dashed',color='w')
+ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+ax.set_xlabel('P:N')
+ax.set_ylabel('Fe:N')
+cbar = plt.colorbar(c,ax=ax)
+cbar.set_label('accuracy prediction biomes',rotation=90, position=(0.5,0.5))
 plt.show()
 
 #%% plot the results for this variation of supply ratios
