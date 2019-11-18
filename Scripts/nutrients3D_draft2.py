@@ -340,6 +340,51 @@ for i in range(len(new_FeN)):
         area_var[i,j] = np.nansum(mask_both[:,:]*area,axis=(0,1))
         IN_var[i,j] = np.sum(mask_both[lat_corr,lon_corr])/len(lat_corr)
 
+#%% Vary both phi values at the same time
+#Create loop to vary P:N and Fe:N values and extract area and accuracy
+# idea: plot P:N and Fe:N vs. area and accuracy
+# modify the plotting scheme from the first approach above
+
+
+#Fe:N
+new_FeN = np.arange(0.5,1.9,0.1) # choose the new ratio for the comparison here
+new_PN = np.arange(0.5,1.9,0.1)
+
+seg_FeN = np.arange(0.5,2.0,0.1)
+seg_PN = np.arange(0.5,2.0,0.1)
+
+area_var = np.zeros((len(seg_FeN)-1,len(seg_PN)-1))
+IN_var = np.zeros_like(area_var)
+
+for i in range(len(seg_FeN)-1):
+    for j in range(len(seg_PN)-1):
+        #bool_new[i,j] = np.where(bio_FeN_tot[:,:] > new_FeN[i], 1, 0)
+        mask_PN = np.where((bio_PN_tot[:,:] >= seg_PN[i]) & (bio_PN_tot[:,:] < seg_PN[i+1]), 1, 0)
+        mask_FeN = np.where((bio_FeN_tot[:,:] >= seg_FeN[i]) & (bio_FeN_tot[:,:] < seg_FeN[i+1]), 1, 0)
+        mask_both = mask_FeN*mask_PN
+        area_var[i,j] = np.nansum(mask_both[:,:]*area,axis=(0,1))
+        IN_var[i,j] = np.sum(mask_both[lat_corr,lon_corr])/len(lat_corr)
+        print(i)
+               
+#%% plot the phi values vs. the area and accuracy for diazotroph co-existence
+
+fig,ax = plt.subplots(1,2,figsize=(9,4),sharey=True)
+c0 = ax[0].contourf(new_PN, new_FeN, area_var,cmap=cm.cm.haline)#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
+c1 = ax[1].contourf(new_PN, new_FeN, IN_var,cmap=cm.cm.haline)#,levels=np.linspace(0,1,11))
+for i in range(0,2):
+    ax[i].axhline(ref_FeN,linewidth=1.0,linestyle='dashed',color='w')
+    ax[i].axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+    ax[i].set_xlabel('P:N')
+    ax[i].set_ylabel('Fe:N')
+ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+ax[1].text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+cbar0 = plt.colorbar(c0,ax=ax[0])
+cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
+cbar1 = plt.colorbar(c1,ax=ax[1])
+cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/phi_vs_area_accuracy.png', bbox_inches='tight', dpi=300)
+
 #%% plot the phi values vs. the area and accuracy for diazotroph co-existence
 
 fig,ax = plt.subplots(1,2,figsize=(9,4),sharey=True)
@@ -357,12 +402,13 @@ cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
 cbar1 = plt.colorbar(c1,ax=ax[1])
 cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
 plt.show()
-fig.savefig('/Users/meilers/MITinternship/Plots/phi_vs_area_accuracy.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/phi_vs_area_accuracy.png', bbox_inches='tight', dpi=300)
+
 
 #%% plot just area or accuracy
 
 fig,ax = plt.subplots(figsize=(5,4))
-c = ax.contourf(new_PN, new_FeN, IN_var,cmap=cm.cm.haline,levels=np.linspace(0,1,11))
+c = ax.contourf(lon, lat, test_mask,cmap=cm.cm.haline,levels=np.linspace(0,1,11))
 ax.axhline(ref_FeN,linewidth=1.0,linestyle='dashed',color='w')
 ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
 ax.set_xlabel('P:N')
