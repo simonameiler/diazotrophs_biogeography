@@ -37,7 +37,7 @@ fig,ax = plt.subplots()
 colors = ('C1','C2')
 
 ax.plot(N, color='C1', label='N')
-ax.plot(P, color=colors[i], label='P')
+ax.plot(P, color=colors[1], label='P')
 ax.legend()
 
 ###################################################
