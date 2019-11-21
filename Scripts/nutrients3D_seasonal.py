@@ -30,7 +30,7 @@ area = area_info.rA
 #%% Read in monthly nutrient data
 
 months_vec = range(0,12)
-months_list = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+#months_list = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 mon_list = ['26160','26400','26640','26880','27120','27360','27600','27840','28080','28320','28560','28800']
 
 #timevector = np.zeros((1,1))
@@ -47,12 +47,12 @@ S_Fe = np.zeros((len(months_vec),6,160,360))
 # Open dataset and load values for each nutrient (top 100m --> 0:6 of depth dimension)
 i = 0
 for month in months_vec:
-    data = xr.open_dataset('/Users/meilers/MITinternship/Data/Nutrients_monthly/nutr_tend.'+str(months_list[month])+'.nc')
-    NH4[month,:,:,:] = data.Tp_gTr04.values[:,0:6,:,:]
-    NO2[month,:,:,:] = data.Tp_gTr03.values[:,0:6,:,:]
-    NO3[month,:,:,:] = data.Tp_gTr02.values[:,0:6,:,:]
-    PO4[month,:,:,:] = data.Tp_gTr05.values[:,0:6,:,:]
-    FeT[month,:,:,:] = data.Tp_gTr06.values[:,0:6,:,:]
+    data = xr.open_dataset('/Users/meilers/MITinternship/Data/run19_33_MONTH/nutr_tend.00000'+str(mon_list[month])+'.nc')
+    NH4[month,:,:,:] = data.gTr02.values[:,0:6,:,:]
+    NO2[month,:,:,:] = data.gTr03.values[:,0:6,:,:]
+    NO3[month,:,:,:] = data.gTr04.values[:,0:6,:,:]
+    PO4[month,:,:,:] = data.gTr05.values[:,0:6,:,:]
+    FeT[month,:,:,:] = data.gTr07.values[:,0:6,:,:]
     S_DIN[month,:,:,:] = data.S_DIN.values[:,0:6,:,:]
     S_PO4[month,:,:,:] = data.S_PO4.values[:,0:6,:,:]
     S_Fe[month,:,:,:] = data.S_Fe.values[:,0:6,:,:]
@@ -73,7 +73,7 @@ diaz5 = np.zeros((len(months_vec),6,160,360))
 # Open dataset
 i = 0
 for month in months_vec:
-    diaz = xr.open_dataset('/Users/meilers/MITinternship/Data/Diaz_mon/3d.00000'+str(mon_list[month])+'.nc')
+    diaz = xr.open_dataset('/Users/meilers/MITinternship/Data/run19_33_MONTH/3d.00000'+str(mon_list[month])+'.nc')
     diaz1[month,:,:,:] = diaz.TRAC30.values[:,0:6,:,:]
     diaz2[month,:,:,:] = diaz.TRAC31.values[:,0:6,:,:]
     diaz3[month,:,:,:] = diaz.TRAC32.values[:,0:6,:,:]
@@ -205,7 +205,7 @@ cbar4 = plt.colorbar(c4,ax=ax[3])
 ax[0].set_title('Seasonal nutrient ratio P:N')
 #cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
 plt.show()
-fig.savefig('/Users/meilers/MITinternship/Plots/seasonal_PN_77.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/seasonal_PN_2019_33.png', bbox_inches='tight', dpi=300)
 
 #%%
 levs_phi = np.linspace(0.5,1.5,11)
@@ -235,7 +235,7 @@ cbar4 = plt.colorbar(c4,ax=ax[3])
 ax[0].set_title('Seasonal nutrient ratio Fe:N')
 #cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
 plt.show()
-fig.savefig('/Users/meilers/MITinternship/Plots/seasonal_FeN_77.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/seasonal_FeN_2019_33.png', bbox_inches='tight', dpi=300)
 
 #%% Plot 1 nutrient at 1 depth
 

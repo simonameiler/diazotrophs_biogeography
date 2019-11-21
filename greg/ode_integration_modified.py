@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
+import cmocean as cm
 
 
 # Euler forward
@@ -68,7 +69,7 @@ theta = {
     'N0':1.6,           #mmol N m-3
     'P0':0.2,           #mmol P m-3 - variable?
     'Fe0':1e-05,        #mmol Fe m-3
-    'f_atm':1e-02,      #mmol Fe m-3 d-1 - assumption from Ward et al. Fig. 6
+    'f_atm':1e-03,      #mmol Fe m-3 d-1 - assumption from Ward et al. Fig. 6
 }
 
 # specify model 
@@ -108,63 +109,40 @@ for i,name in enumerate(('p','d','N','P','Fe')):
 ax.legend()
 
 #%% Modify the simple framework of above
-
-# specify parameter values
-theta = {
-    'mu_p':2.5,         #d-1
-    'mu_d':1.25,        #d-1
-    'K_p_N':0.056,      #mmol N m-3
-    'K_p_P':0.035,      #mmol P m-3
-    'K_p_Fe':0.00035,   #mmol Fe m-3
-    'K_d_P':0.035,      #mmol P m-3
-    'K_d_Fe':0.0011,    #mmol Fe m-3
-    'r_p_P':0.0625,     # -
-    'r_p_Fe':6.25e-05,  # -
-    'r_d_P':0.025,      # -
-    'r_d_Fe':7.5e-04,   # -
-    'kappa':0.1,        #d-1
-    'm':0.05,           #d-1
-    'N0':1.6,           #mmol N m-3
-    'P0':0.12,          #mmol P m-3 - variable?
-    'Fe0':1e-05,        #mmol Fe m-3
-    'f_atm':5e-03,      #mmol Fe m-3 d-1 - assumption from Ward et al. Fig. 6
-}
-
-list_P0 = np.arange(0.5,2.0,0.1)
-
-# specify model 
-def dxdt(x,t,theta):
-    p_growth = theta['mu_p']*min((x[i_N]/(x[i_N]+theta['K_p_N'])),(x[i_P]/(x[i_P]+theta['K_p_P'])),(x[i_Fe]/(x[i_Fe]+theta['K_p_Fe'])))*x[i_p]
-    d_growth = theta['mu_d']*min((x[i_P]/(x[i_P]+theta['K_d_P'])),(x[i_Fe]/(x[i_Fe]+theta['K_d_Fe'])))*x[i_d]
-    p_mort = theta['m']*x[i_p]
-    d_mort = theta['m']*x[i_d]
-    p_mix  = theta['kappa']*x[i_p]
-    d_mix  = theta['kappa']*x[i_d]
-    N_mix  = theta['kappa']*(theta['N0'] - x[i_N])
-    for i in range(len(list_P0)-1):
-        theta['P0']=list_P0[i]
-        P_mix  = theta['kappa']*(list_P0[i] - x[i_P])
-        Fe_mix = theta['kappa']*(theta['Fe0'] - x[i_Fe])
-        dp     = p_growth - p_mort - p_mix
-        dd     = d_growth - d_mort - d_mix
-        dN     = -p_growth + p_mort + N_mix
-        dP     = -p_growth*theta['r_p_P'] - d_growth*theta['r_d_P'] + theta['m']*(x[i_p]*theta['r_p_P']) + theta['m']*(x[i_d]*theta['r_d_P']) + P_mix
-        dFe    = -p_growth*theta['r_p_Fe'] - d_growth*theta['r_d_Fe'] + theta['m']*(x[i_p]*theta['r_p_Fe']) + theta['m']*(x[i_d]*theta['r_d_Fe']) + Fe_mix + theta['f_atm']
-        return np.array((dp, dd, dN, dP, dFe))
-
 # initial conditions
 x0 = (1.0,1.0,1.0,1.0,1.0)
 
 # times where you want the solution
 t = np.arange(0.0,1000.0,0.01)
 
+# build loop here to vary P0 and Fe0
+var_P0 = np.linspace(0.02,0.16,50)
+var_Fe0 = np.logspace(-7,-0,50)
+phi_PN = np.zeros(len(var_P0)-1)
+phi_FeN = np.zeros(len(var_Fe0)-1)
+matrix_steady_state = np.zeros((len(var_P0)-1,len(var_Fe0)-1,5))
+for i in range(len(var_P0)-1):
+    theta['P0'] = var_P0[i]
+    phi_PN[i] = theta['P0']/theta['N0']*(1/theta['r_p_P'])
+    for j in range(len(var_Fe0)-1):
+        theta['Fe0'] = var_Fe0[j]
+        phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
+        x = odeint(dxdt, x0, t, args=(theta,))
+        #print('i: '+str(i))
+        #print('j: '+str(j))
+        #print('Fe0: '+str(theta['Fe0']))
+        #print('P0: '+str(theta['P0']))
+        #print(x[-1,:])
+        matrix_steady_state[i,j,:] = x[-1,:]
+
+
 # solve ODE
-x = odeint(dxdt, x0, t, args=(theta,))
+#x = odeint(dxdt, x0, t, args=(theta,))
 
-
+#%%
 # calculate nutrient ratios
-phi_PN = theta['P0']/theta['N0']*(1/theta['r_p_P'])
-phi_FeN = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
+#phi_PN = theta['P0']/theta['N0']*(1/theta['r_p_P'])
+#phi_FeN = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
 
 # plot
 fig,ax = plt.subplots()
@@ -174,3 +152,32 @@ for i,name in enumerate(('p','d','N','P','Fe')):
     ax.plot(t,x[:,i], color=colors[i], label=name)
 
 ax.legend()
+
+#%% 
+fig,ax = plt.subplots(1,2,figsize=(9,4))#,sharey=True)
+c0 = ax[0].imshow(phi_FeN, phi_PN, matrix_steady_state[:,:,4])#,cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
+c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,2,101),extend='both')
+for i in range(0,2):
+    #ax[i].axhline(var_P0,linewidth=1.0,linestyle='dashed',color='w')
+    #ax[i].axvline(var_Fe0,linewidth=1.0,linestyle='dashed',color='w')
+    ax[i].set_ylabel('P:N')
+    ax[i].set_xlabel('Fe:N')
+#ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+#ax[1].text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+cbar0 = plt.colorbar(c0,ax=ax[0])
+#cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
+cbar1 = plt.colorbar(c1,ax=ax[1])
+#cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
+plt.show()
+
+#%% 
+fig,ax = plt.subplots(1,1,figsize=(4,4))#,sharey=True)
+c0 = ax.imshow(matrix_steady_state[:,:,1])#,cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
+#c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,2,101),extend='both')
+#ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+#ax[1].text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+#cbar0 = plt.colorbar(c0,ax=ax[0])
+#cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
+#cbar1 = plt.colorbar(c1,ax=ax[1])
+#cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
+plt.show()
