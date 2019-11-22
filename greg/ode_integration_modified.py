@@ -85,9 +85,9 @@ def dxdt(x,t,theta):
     Fe_mix = theta['kappa']*(theta['Fe0'] - x[i_Fe])
     dp     = p_growth - p_mort - p_mix
     dd     = d_growth - d_mort - d_mix
-    dN     = -p_growth + p_mort + N_mix
-    dP     = -p_growth*theta['r_p_P'] - d_growth*theta['r_d_P'] + theta['m']*(x[i_p]*theta['r_p_P']) + theta['m']*(x[i_d]*theta['r_d_P']) + P_mix
-    dFe    = -p_growth*theta['r_p_Fe'] - d_growth*theta['r_d_Fe'] + theta['m']*(x[i_p]*theta['r_p_Fe']) + theta['m']*(x[i_d]*theta['r_d_Fe']) + Fe_mix + theta['f_atm']
+    dN     = -p_growth + p_mort + d_mort + N_mix
+    dP     = -p_growth*theta['r_p_P'] - d_growth*theta['r_d_P'] + p_mort*theta['r_p_P'] + d_mort*theta['r_d_P'] + P_mix
+    dFe    = -p_growth*theta['r_p_Fe'] - d_growth*theta['r_d_Fe'] + p_mort*theta['r_p_Fe'] + d_mort*theta['r_d_Fe'] + Fe_mix + theta['f_atm']
     return np.array((dp, dd, dN, dP, dFe))
 
 # initial conditions
@@ -115,22 +115,22 @@ x0 = (1.0,1.0,1.0,1.0,1.0)
 # times where you want the solution
 t = np.arange(0.0,1000.0,0.01)
 
-# build loop here to vary P0 and Fe0
-var_P0 = np.linspace(0.02,0.16,50)
-var_Fe0 = np.logspace(-7,-0,50)
-phi_PN = np.zeros(len(var_P0)-1)
-phi_FeN = np.zeros(len(var_Fe0)-1)
-matrix_steady_state = np.zeros((len(var_P0)-1,len(var_Fe0)-1,5))
-for i in range(len(var_P0)-1):
+# build loop here to vary P0 and f_atm
+var_P0 = np.linspace(0.08,0.16,50)
+var_f_atm = np.linspace(1e-05,1e-01,50)
+phi_PN = np.zeros(len(var_P0))
+phi_FeN = np.zeros(len(var_f_atm))
+matrix_steady_state = np.zeros((len(var_P0),len(var_f_atm),5))
+for i in range(len(var_P0)):
     theta['P0'] = var_P0[i]
     phi_PN[i] = theta['P0']/theta['N0']*(1/theta['r_p_P'])
-    for j in range(len(var_Fe0)-1):
-        theta['Fe0'] = var_Fe0[j]
+    for j in range(len(var_f_atm)):
+        theta['f_atm'] = var_f_atm[j]
         phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
         x = odeint(dxdt, x0, t, args=(theta,))
         #print('i: '+str(i))
         #print('j: '+str(j))
-        #print('Fe0: '+str(theta['Fe0']))
+        #print('f_atm: '+str(theta['f_atm']))
         #print('P0: '+str(theta['P0']))
         #print(x[-1,:])
         matrix_steady_state[i,j,:] = x[-1,:]
@@ -139,12 +139,7 @@ for i in range(len(var_P0)-1):
 # solve ODE
 #x = odeint(dxdt, x0, t, args=(theta,))
 
-#%%
-# calculate nutrient ratios
-#phi_PN = theta['P0']/theta['N0']*(1/theta['r_p_P'])
-#phi_FeN = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
-
-# plot
+#%% plot
 fig,ax = plt.subplots()
 colors = ('C0','C1','C2','C3','C4')
 
@@ -155,11 +150,11 @@ ax.legend()
 
 #%% 
 fig,ax = plt.subplots(1,2,figsize=(9,4))#,sharey=True)
-c0 = ax[0].imshow(phi_FeN, phi_PN, matrix_steady_state[:,:,4])#,cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
+c0 = ax[0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,4],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
 c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,2,101),extend='both')
 for i in range(0,2):
     #ax[i].axhline(var_P0,linewidth=1.0,linestyle='dashed',color='w')
-    #ax[i].axvline(var_Fe0,linewidth=1.0,linestyle='dashed',color='w')
+    #ax[i].axvline(var_f_atm,linewidth=1.0,linestyle='dashed',color='w')
     ax[i].set_ylabel('P:N')
     ax[i].set_xlabel('Fe:N')
 #ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
@@ -170,14 +165,43 @@ cbar1 = plt.colorbar(c1,ax=ax[1])
 #cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
 plt.show()
 
-#%% 
-fig,ax = plt.subplots(1,1,figsize=(4,4))#,sharey=True)
-c0 = ax.imshow(matrix_steady_state[:,:,1])#,cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
-#c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,2,101),extend='both')
-#ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-#ax[1].text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-#cbar0 = plt.colorbar(c0,ax=ax[0])
-#cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
-#cbar1 = plt.colorbar(c1,ax=ax[1])
-#cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
+
+#%% Modify and visualize other parameters
+
+# build loop here to vary P0 and f_atm
+x0 = (0.1,0.1,0.1,0.1,0.1)
+
+var_rdFe = [3.75e-04, 7.5e-04, 1.5e-03]
+var_f_atm = np.logspace(-6,-3,50)
+
+theta['P0'] = 0.12
+phi_PN = theta['P0']/theta['N0']*(1/theta['r_p_P'])
+
+phi_FeN = np.zeros(len(var_f_atm))
+matrix_steady_state = np.zeros((len(var_rdFe),len(var_f_atm),5))
+for i in range(len(var_rdFe)):
+    theta['r_d_Fe'] = var_rdFe[i]
+    for j in range(len(var_f_atm)):
+        theta['f_atm'] = var_f_atm[j]
+        phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
+        x = odeint(dxdt, x0, t, args=(theta,))
+        #print('i: '+str(i))
+        #print('j: '+str(j))
+        #print('f_atm: '+str(theta['f_atm']))
+        #print('P0: '+str(theta['P0']))
+        #print(x[-1,:])
+        matrix_steady_state[i,j,:] = x[-1,:]
+        
+        
+#%% plot diazotroph vs. phi_FeN
+fig,ax = plt.subplots(1,1,figsize=(9,4))#,sharey=True)
+plt.plot(phi_FeN[:],matrix_steady_state[0,:,0],label='rdFe= 0.5x')
+plt.plot(phi_FeN[:],matrix_steady_state[1,:,0],label='rdFe= 1x')
+plt.plot(phi_FeN[:],matrix_steady_state[2,:,0],label='rdFe= 2x')
+plt.plot(phi_FeN[:],matrix_steady_state[0,:,1],label='rdFe= 0.5x')
+plt.plot(phi_FeN[:],matrix_steady_state[1,:,1],label='rdFe= 1x')
+plt.plot(phi_FeN[:],matrix_steady_state[2,:,1],label='rdFe= 2x')
+ax.legend(loc='upper right')
+ax.set_xlabel('normalized Fe:N supply ratio')
+ax.set_ylabel('diazotrophs (mmol N m-3)')
 plt.show()
