@@ -117,7 +117,7 @@ t = np.arange(0.0,1000.0,0.01)
 
 # build loop here to vary P0 and f_atm
 var_P0 = np.linspace(0.08,0.16,50)
-var_f_atm = np.linspace(1e-05,1e-01,50)
+var_f_atm = np.linspace(1e-03,1e-01,50)/365
 phi_PN = np.zeros(len(var_P0))
 phi_FeN = np.zeros(len(var_f_atm))
 matrix_steady_state = np.zeros((len(var_P0),len(var_f_atm),5))
@@ -126,7 +126,7 @@ for i in range(len(var_P0)):
     phi_PN[i] = theta['P0']/theta['N0']*(1/theta['r_p_P'])
     for j in range(len(var_f_atm)):
         theta['f_atm'] = var_f_atm[j]
-        phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
+        phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/(theta['N0']*theta['kappa']))*(1/theta['r_p_Fe'])
         x = odeint(dxdt, x0, t, args=(theta,))
         #print('i: '+str(i))
         #print('j: '+str(j))
@@ -150,7 +150,7 @@ ax.legend()
 
 #%% 
 fig,ax = plt.subplots(1,2,figsize=(9,4))#,sharey=True)
-c0 = ax[0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,4],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
+c0 = ax[0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
 c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,2,101),extend='both')
 for i in range(0,2):
     #ax[i].axhline(var_P0,linewidth=1.0,linestyle='dashed',color='w')
@@ -172,7 +172,7 @@ plt.show()
 x0 = (0.1,0.1,0.1,0.1,0.1)
 
 var_rdFe = [3.75e-04, 7.5e-04, 1.5e-03]
-var_f_atm = np.logspace(-6,-3,50)
+var_f_atm = np.logspace(-4,-1.5,200)/365
 
 theta['P0'] = 0.12
 phi_PN = theta['P0']/theta['N0']*(1/theta['r_p_P'])
@@ -183,7 +183,7 @@ for i in range(len(var_rdFe)):
     theta['r_d_Fe'] = var_rdFe[i]
     for j in range(len(var_f_atm)):
         theta['f_atm'] = var_f_atm[j]
-        phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/theta['N0']*theta['kappa'])*(1/theta['r_p_Fe'])
+        phi_FeN[j] = ((theta['kappa']*theta['Fe0']+theta['f_atm'])/(theta['N0']*theta['kappa']))*(1/theta['r_p_Fe'])
         x = odeint(dxdt, x0, t, args=(theta,))
         #print('i: '+str(i))
         #print('j: '+str(j))
