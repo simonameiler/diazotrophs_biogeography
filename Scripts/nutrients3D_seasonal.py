@@ -30,7 +30,7 @@ area = area_info.rA
 #%% Read in monthly nutrient data
 
 months_vec = range(0,12)
-#months_list = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+months_list = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 mon_list = ['26160','26400','26640','26880','27120','27360','27600','27840','28080','28320','28560','28800']
 
 #timevector = np.zeros((1,1))
@@ -86,7 +86,7 @@ for month in months_vec:
 diaz = diaz1 + diaz2 + diaz3 + diaz4 + diaz5
 
 #%% define sec per year and dz
-sec = 1  #seconds per year (365.25*86400) - not needed; I used it for the annual analysis. 
+sec = 1  # 7200 seconds per month; seconds per year (365.25*86400) - not needed; I used it for the annual analysis. 
 dz = [10,10,15,20,20,25] #,35,50,75,100] #(...) dz between two depth layers
 
 #%% sum nutrients up over depth and multiply with corresponding dz and sec
@@ -175,6 +175,36 @@ bio_FeN_DJF = (bio_FeN[0,:,:]+bio_FeN[1,:,:]+bio_FeN[11,:,:])/3
 
 #%% mask where P:N OR Fe:N is sufficient to support diazotrophs
 mask_JJA = np.where((np.mean(bio_FeN[2:4,:,:],axis=0) > ref_FeN) & (np.mean(bio_PN[2:4,:,:],axis=0) > ref_PN), 1, 0)
+
+#%% Plot seasonal supply at different latitudes
+lat10 = np.mean(N_tot[:,90,:], axis=1)
+lat20 = np.mean(N_tot[:,100,:], axis=1)
+lat30 = np.mean(N_tot[:,110,:], axis=1)
+lat40 = np.mean(N_tot[:,120,:], axis=1)
+
+plt.plot(months_list, lat10,'.',color='b')
+plt.plot(months_list, lat20,'.',color='r')
+plt.plot(months_list, lat30,'.',color='g')
+plt.plot(months_list, lat40,'.',color='k')
+plt.show()
+
+#%%
+plt.plot(months_list, np.mean(diaz_int[:,90,:], axis=1),'-',color='b',label='10N')
+plt.plot(months_list, np.mean(diaz_int[:,100,:], axis=1),'-',color='r',label='20N')
+plt.plot(months_list, np.mean(diaz_int[:,110,:], axis=1),'-',color='g',label='30N')
+plt.plot(months_list, np.mean(diaz_int[:,120,:], axis=1),'-',color='k',label='40N')
+plt.legend()
+plt.show()
+
+
+#%% 
+plt.plot(months_list, np.mean(P_tot[:,90,:], axis=1),'-',color='b',label='10N')
+plt.plot(months_list, np.mean(P_tot[:,100,:], axis=1),'-',color='r',label='20N')
+plt.plot(months_list, np.mean(P_tot[:,110,:], axis=1),'-',color='g',label='30N')
+plt.plot(months_list, np.mean(P_tot[:,120,:], axis=1),'-',color='k',label='40N')
+plt.legend()
+plt.show()
+
 
 #%% Plot seasonal nutrient ratio patterns
 

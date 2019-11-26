@@ -150,8 +150,8 @@ ax.legend()
 
 #%% 
 fig,ax = plt.subplots(1,2,figsize=(9,4))#,sharey=True)
-c0 = ax[0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
-c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,2,101),extend='both')
+c0 = ax[0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,0],cmap=cm.cm.haline,levels=np.linspace(0,2.5,101),extend='both')
+c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
 for i in range(0,2):
     #ax[i].axhline(var_P0,linewidth=1.0,linestyle='dashed',color='w')
     #ax[i].axvline(var_f_atm,linewidth=1.0,linestyle='dashed',color='w')
