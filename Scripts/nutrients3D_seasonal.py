@@ -8,11 +8,13 @@ This is a temporary script file.
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.pylab as pl
 from netCDF4 import Dataset
 import cmocean as cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+import seaborn as sns
 
 #%% Load data
 
@@ -177,34 +179,49 @@ bio_FeN_DJF = (bio_FeN[0,:,:]+bio_FeN[1,:,:]+bio_FeN[11,:,:])/3
 mask_JJA = np.where((np.mean(bio_FeN[2:4,:,:],axis=0) > ref_FeN) & (np.mean(bio_PN[2:4,:,:],axis=0) > ref_PN), 1, 0)
 
 #%% Plot seasonal supply at different latitudes
-lat10 = np.mean(N_tot[:,90,:], axis=1)
-lat20 = np.mean(N_tot[:,100,:], axis=1)
-lat30 = np.mean(N_tot[:,110,:], axis=1)
-lat40 = np.mean(N_tot[:,120,:], axis=1)
 
-plt.plot(months_list, lat10,'.',color='b')
-plt.plot(months_list, lat20,'.',color='r')
-plt.plot(months_list, lat30,'.',color='g')
-plt.plot(months_list, lat40,'.',color='k')
-plt.show()
+#col = sns.palplot(sns.color_palette("RdYlBu", 7))
+longitude = 20 # which is 159.5 W
+latitude = [112,113,114,115,116,117,118]#,119,120]
+lat_names = ['32.5°N','33.5°N','34.5°N,','35.5°N','36.5°N','37.5°N','38.5°N']
+plot_names = ['diazotrophs','N total', 'P total', 'Fe total']
 
-#%%
-plt.plot(months_list, np.mean(diaz_int[:,90,:], axis=1),'-',color='b',label='10N')
-plt.plot(months_list, np.mean(diaz_int[:,100,:], axis=1),'-',color='r',label='20N')
-plt.plot(months_list, np.mean(diaz_int[:,110,:], axis=1),'-',color='g',label='30N')
-plt.plot(months_list, np.mean(diaz_int[:,120,:], axis=1),'-',color='k',label='40N')
-plt.legend()
+colors = pl.cm.jet(np.linspace(0,1,len(latitude)))
+
+fig,ax = plt.subplots(2,2, figsize=(9,9))
+for i in range(len(latitude)):
+    ax[0,0].plot(months_list, diaz_int[:,latitude[i],longitude],'-',color=colors[i],label=lat_names[i])
+    ax[0,1].plot(months_list, N_tot[:,latitude[i],longitude],'-',color=colors[i],label=lat_names[i])
+    ax[1,0].plot(months_list, P_tot[:,latitude[i],longitude],'-',color=colors[i],label=lat_names[i])
+    ax[1,1].plot(months_list, Fe_tot[:,latitude[i],longitude],'-',color=colors[i],label=lat_names[i])
+    ax[0,0].text(0.85,0.95,''+(str(plot_names[0])+''),transform=ax[0,0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[0,1].text(0.9,0.95,''+(str(plot_names[1])+''),transform=ax[0,1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[1,0].text(0.9,0.95,''+(str(plot_names[2])+''),transform=ax[1,0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[1,1].text(0.9,0.95,''+(str(plot_names[3])+''),transform=ax[1,1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.legend(loc='lower center',bbox_to_anchor=(1.2,1.7))
 plt.show()
 
 
 #%% 
-plt.plot(months_list, np.mean(P_tot[:,90,:], axis=1),'-',color='b',label='10N')
-plt.plot(months_list, np.mean(P_tot[:,100,:], axis=1),'-',color='r',label='20N')
-plt.plot(months_list, np.mean(P_tot[:,110,:], axis=1),'-',color='g',label='30N')
-plt.plot(months_list, np.mean(P_tot[:,120,:], axis=1),'-',color='k',label='40N')
-plt.legend()
-plt.show()
+longitude = 20 # which is 159.5 W
+latitude = [112,113,114,115,116,117,118]#,119,120]
+lat_names = ['32.5°N','33.5°N','34.5°N,','35.5°N','36.5°N','37.5°N','38.5°N']
+plot_names = ['diazotrophs','N total', 'P total', 'Fe total']
 
+colors = pl.cm.jet(np.linspace(0,1,len(months_list)))
+
+fig,ax = plt.subplots(2,2, figsize=(9,9))
+for i in range(len(months_list)):
+    ax[0,0].plot(latitude, diaz_int[i,latitude[:],longitude],'.',color=colors[i],label=months_list[i])
+    ax[0,1].plot(latitude, N_tot[i,latitude[:],longitude],'.',color=colors[i],label=months_list[i])
+    ax[1,0].plot(latitude, P_tot[i,latitude[:],longitude],'.',color=colors[i],label=months_list[i])
+    ax[1,1].plot(latitude, Fe_tot[i,latitude[:],longitude],'.',color=colors[i],label=months_list[i])
+    ax[0,0].text(0.85,0.95,''+(str(plot_names[0])+''),transform=ax[0,0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[0,1].text(0.9,0.95,''+(str(plot_names[1])+''),transform=ax[0,1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[1,0].text(0.9,0.95,''+(str(plot_names[2])+''),transform=ax[1,0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[1,1].text(0.9,0.95,''+(str(plot_names[3])+''),transform=ax[1,1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.legend(loc='lower center',bbox_to_anchor=(1.2,1.3))
+plt.show()
 
 #%% Plot seasonal nutrient ratio patterns
 
