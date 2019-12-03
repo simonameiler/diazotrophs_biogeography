@@ -149,22 +149,34 @@ for i,name in enumerate(('p','d','N','P','Fe')):
 ax.legend()
 
 #%% 
-fig,ax = plt.subplots(1,2,figsize=(9,4))#,sharey=True)
-c0 = ax[0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,0],cmap=cm.cm.haline,levels=np.linspace(0,2.5,101),extend='both')
-c1 = ax[1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
+param_list = ['N (mmol m-3)','P (mmol m-3)','Fe (mmol m-3)','diaz (mmol N m-3)']
+fig,ax = plt.subplots(2,2,figsize=(9,9),sharex=True,sharey=True)
+c0 = ax[0,0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,2],cmap=cm.cm.haline,levels=np.linspace(0,0.1,101),extend='both')
+c1 = ax[0,1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,3],cmap=cm.cm.haline,levels=np.linspace(0,0.01,101),extend='both')
+c2 = ax[1,0].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,4],cmap=cm.cm.haline,levels=np.linspace(0,0.001,101),extend='both')
+c3 = ax[1,1].contourf(phi_FeN, phi_PN, matrix_steady_state[:,:,1],cmap=cm.cm.haline,levels=np.linspace(0,1,101),extend='both')
+m = 0
 for i in range(0,2):
+    for j in range(0,2):
+        ax[i,j].text(0.1,0.95, param_list[m], size=10, rotation=0.,ha="left", va="center",bbox=dict(boxstyle="round",facecolor='w'),transform=ax[i,j].transAxes)
+        m += 1
     #ax[i].axhline(var_P0,linewidth=1.0,linestyle='dashed',color='w')
     #ax[i].axvline(var_f_atm,linewidth=1.0,linestyle='dashed',color='w')
-    ax[i].set_ylabel('P:N')
-    ax[i].set_xlabel('Fe:N')
+    ax[i,0].set_ylabel('P:N')
+    ax[1,i].set_xlabel('Fe:N')
 #ax[0].text(0.9,0.95,'area',transform=ax[0].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 #ax[1].text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-cbar0 = plt.colorbar(c0,ax=ax[0])
+cbar0 = plt.colorbar(c0,ax=ax[0,0])
 #cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
-cbar1 = plt.colorbar(c1,ax=ax[1])
+cbar1 = plt.colorbar(c1,ax=ax[0,1])
+#cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
+cbar2 = plt.colorbar(c2,ax=ax[1,0])
+#cbar0.set_label('(m)',rotation=90, position=(0.5,0.5))
+cbar3 = plt.colorbar(c3,ax=ax[1,1])
 #cbar1.set_label('(-)',rotation=90, position=(0.5,0.5))
 plt.show()
 
+#fig.savefig('/Users/meilers/MITinternship/Plots/ode_SS_nutrients_diaz.png', bbox_inches='tight', dpi=300)
 
 #%% Modify and visualize other parameters
 

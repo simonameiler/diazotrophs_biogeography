@@ -77,7 +77,7 @@ def dxdt(x,t,theta):
     dd2    = d2_growth - d2_mort - d2_mix
     dd3    = d3_growth - d3_mort - d3_mix
     dd4    = d4_growth - d4_mort - d4_mix
-    dN     = -p_growth + p_mort + N_mix
+    dN     = -p_growth + p_mort + d1_mort + d2_mort + d3_mort + d4_mort + N_mix
     dP     = -p_growth*theta['r_p_P'] - d1_growth*theta['r_d1_P'] - d2_growth*theta['r_d2_P'] - d3_growth*theta['r_d3_P'] - d4_growth*theta['r_d4_P'] + theta['m']*(x[i_p]*theta['r_p_P']) + theta['m']*(x[i_d1]*theta['r_d1_P']) + theta['m']*(x[i_d2]*theta['r_d2_P']) + theta['m']*(x[i_d3]*theta['r_d3_P']) + theta['m']*(x[i_d4]*theta['r_d4_P']) + P_mix
     dFe    = -p_growth*theta['r_p_Fe'] - d1_growth*theta['r_d1_Fe'] - d2_growth*theta['r_d2_Fe'] - d3_growth*theta['r_d3_Fe'] - d4_growth*theta['r_d4_Fe'] + theta['m']*(x[i_p]*theta['r_p_Fe']) + theta['m']*(x[i_d1]*theta['r_d1_Fe']) + theta['m']*(x[i_d2]*theta['r_d2_Fe']) + theta['m']*(x[i_d3]*theta['r_d3_Fe']) + theta['m']*(x[i_d4]*theta['r_d4_Fe']) + Fe_mix + theta['f_atm']
     return np.array((dp, dd1, dd2, dd3, dd4, dN, dP, dFe))
@@ -112,20 +112,20 @@ i_Fe = 5
 # specify parameter values - 2 different diazotroph species
 theta = {
     'mu_p':2.5,         #d-1
-    'mu_d1':1.25,       #d-1
-    'mu_d2':1.25,        #d-1
+    'mu_d1':1.68,       #d-1            Follet et al., 2018
+    'mu_d2':0.61,       #d-1            Follet et al., 2018
     'K_p_N':0.056,      #mmol N m-3
     'K_p_P':0.035,      #mmol P m-3
     'K_p_Fe':0.00035,   #mmol Fe m-3
-    'K_d1_P':0.035,     #mmol P m-3
-    'K_d1_Fe':0.0011,   #mmol Fe m-3
-    'K_d2_P':0.035,     #mmol P m-3
-    'K_d2_Fe':0.0011,   #mmol Fe m-3
+    'K_d1_P':0.13,      #mmol P m-3     Follet et al., 2018
+    'K_d1_Fe':0.0005,   #mmol Fe m-3    Follet et al., 2018
+    'K_d2_P':0.0015,    #mmol P m-3     Follet et al., 2018
+    'K_d2_Fe':6e-06,    #mmol Fe m-3    Follet et al., 2018
     'r_p_P':0.0625,     # -
     'r_p_Fe':6.25e-05,  # -
     'r_d1_P':0.025,     # -
     'r_d1_Fe':7.5e-04,  # -
-    'r_d2_P':0.025,      # -
+    'r_d2_P':0.025,     # -
     'r_d2_Fe':7.5e-04,  # -
     'kappa':0.1,        #d-1
     'm':0.05,           #d-1
@@ -152,7 +152,7 @@ def dxdt(x,t,theta):
     dp     = p_growth - p_mort - p_mix
     dd1    = d1_growth - d1_mort - d1_mix
     dd2    = d2_growth - d2_mort - d2_mix
-    dN     = -p_growth + p_mort + N_mix
+    dN     = -p_growth + p_mort + d1_mort +d2_mort + N_mix
     dP     = -p_growth*theta['r_p_P'] - d1_growth*theta['r_d1_P'] - d2_growth*theta['r_d2_P'] + theta['m']*(x[i_p]*theta['r_p_P']) + theta['m']*(x[i_d1]*theta['r_d1_P']) + theta['m']*(x[i_d2]*theta['r_d2_P']) + P_mix
     dFe    = -p_growth*theta['r_p_Fe'] - d1_growth*theta['r_d1_Fe'] - d2_growth*theta['r_d2_Fe'] + theta['m']*(x[i_p]*theta['r_p_Fe']) + theta['m']*(x[i_d1]*theta['r_d1_Fe']) + theta['m']*(x[i_d2]*theta['r_d2_Fe']) + Fe_mix + theta['f_atm']
     return np.array((dp, dd1, dd2, dN, dP, dFe))

@@ -158,7 +158,7 @@ rpP = 0.0625
 rpFe = 6.25e-5
 k = 0.1
 ref_PN = 1.04
-ref_FeN = 1.2
+ref_FeN = 2.5
 
 bio_PN = (P_tot/N_tot)*(1/rpP)
 bio_FeN = (Fe_tot/N_tot)*(1/rpFe)
@@ -245,6 +245,10 @@ c1 = ax[0].contourf(lon,lat,bio_PN_DJF[:,:],levels=levs_phi,cmap=colmap,extend='
 c2 = ax[1].contourf(lon,lat,np.mean(bio_PN[2:4,:,:],axis=0),levels=levs_phi,cmap=colmap,extend='both')
 c3 = ax[2].contourf(lon,lat,np.mean(bio_PN[5:7,:,:],axis=0),levels=levs_phi,cmap=colmap,extend='both')
 c4 = ax[3].contourf(lon,lat,np.mean(bio_PN[8:10,:,:],axis=0),levels=levs_phi,cmap=colmap,extend='both')
+#con1 = ax[0].contour(lon,lat,bio_PN_DJF[:,:],levels=[ref_PN],colors='k',linewidths=1,linstyle='solid')
+#con2 = ax[1].contour(lon,lat,np.mean(bio_PN[2:4,:,:],axis=0),levels=[ref_PN],colors='r',linewidths=1,linstyle='solid')
+#con3 = ax[2].contour(lon,lat,np.mean(bio_PN[5:7,:,:],axis=0),levels=[ref_PN],colors='r',linewidths=1,linstyle='solid')
+#con4 = ax[3].contour(lon,lat,np.mean(bio_PN[8:10,:,:],axis=0),levels=[ref_PN],colors='r',linewidths=1,linstyle='solid')
 cbar1 = plt.colorbar(c1,ax=ax[0])
 cbar2 = plt.colorbar(c2,ax=ax[1])
 cbar3 = plt.colorbar(c3,ax=ax[2])
@@ -255,7 +259,7 @@ plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/seasonal_PN_2019_33.png', bbox_inches='tight', dpi=300)
 
 #%%
-levs_phi = np.linspace(0.5,1.5,11)
+levs_phi = np.linspace(0.5,3.5,31)
 
 colmap = plt.get_cmap('RdBu_r')
 
@@ -275,6 +279,10 @@ c1 = ax[0].contourf(lon,lat,bio_FeN_DJF[:,:],levels=levs_phi,cmap=colmap,extend=
 c2 = ax[1].contourf(lon,lat,np.mean(bio_FeN[2:4,:,:],axis=0),levels=levs_phi,cmap=colmap,extend='both')
 c3 = ax[2].contourf(lon,lat,np.mean(bio_FeN[5:7,:,:],axis=0),levels=levs_phi,cmap=colmap,extend='both')
 c4 = ax[3].contourf(lon,lat,np.mean(bio_FeN[8:10,:,:],axis=0),levels=levs_phi,cmap=colmap,extend='both')
+#con1 = ax[0].contour(lon,lat,bio_FeN_DJF[:,:],levels=[ref_FeN],colors='k',linewidths=1,linstyle='solid')
+#con2 = ax[1].contour(lon,lat,np.mean(bio_FeN[2:4,:,:],axis=0),levels=[ref_FeN],colors='r',linewidths=1,linstyle='solid')
+#con3 = ax[2].contour(lon,lat,np.mean(bio_FeN[5:7,:,:],axis=0),levels=[ref_FeN],colors='r',linewidths=1,linstyle='solid')
+#con4 = ax[3].contour(lon,lat,np.mean(bio_FeN[8:10,:,:],axis=0),levels=[ref_FeN],colors='r',linewidths=1,linstyle='solid')
 cbar1 = plt.colorbar(c1,ax=ax[0])
 cbar2 = plt.colorbar(c2,ax=ax[1])
 cbar3 = plt.colorbar(c3,ax=ax[2])
@@ -315,7 +323,7 @@ plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/seasonal_diaz.png', bbox_inches='tight', dpi=300)
 
 
-#%% Plot 1 nutrient at 1 depth
+#%% Plot monthly anomalies from mean diazotroph provinces
 colmap = plt.get_cmap('RdBu_r')
 levs = np.linspace(-10,10,21)
 
@@ -347,6 +355,39 @@ for i in range(4):
         cbar = fig.colorbar(c0, cax=cbar_ax)
         #cbar.set_label('more         (m)           less', rotation=90,labelpad=10)
 #fig.savefig('/Users/meilers/MITinternship/Plots/monthly_diaz_anomalies2.png', bbox_inches='tight', dpi=300)
+        
+#%% Plot monthly diazotroph provinces
+colmap = plt.get_cmap('RdBu_r')
+levs = np.linspace(0,20,21)
+
+diaz_mean = np.mean(diaz_int[:,:,:],axis=0)
+
+fig,ax = plt.subplots(4,3, subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)}, sharex=True, sharey=True, figsize=(12,7))
+months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+m = 0
+for i in range(4):
+    for j in range(3):
+        #ax[i,j].imshow(np.tile(np.array([[[224, 224, 224]]], dtype=np.uint8), [2, 2, 1]), origin='upper', transform=ccrs.PlateCarree(), extent=[-180, 180, -180, 180])
+        ax[i,j].coastlines(color='#888888',linewidth=1.5)
+        ax[i,j].add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+        c0 = ax[i,j].contourf(lon,lat,(diaz_int[m,:,:]),levels=levs,extend='both',cmap=colmap)
+        #c0 = ax[i,j].contourf(lon,lat,diaz_int[m,:,:],levels=levs,extend='both',cmap=colmap)
+        #ax[i,j].set_extent([220-360, 295-360, -30, 30])
+        #ax[i,j].set_xticks([240, 270], crs=ccrs.PlateCarree())
+        #ax[i,j].set_yticks([-20, 0, 20], crs=ccrs.PlateCarree())
+        lon_formatter = LongitudeFormatter(zero_direction_label=True)
+        lat_formatter = LatitudeFormatter()
+        ax[2,j].xaxis.set_major_formatter(lon_formatter)
+        ax[i,0].yaxis.set_major_formatter(lat_formatter)       
+        ax[i,j].grid()
+        ax[i,j].text(0.78,0.9, months[m], size=10, rotation=0.,ha="left", va="center",bbox=dict(boxstyle="round",facecolor='w'),transform=ax[i,j].transAxes)
+        m += 1    
+        plt.suptitle('Monthly mean diazotroph biogeography',y=0.92)
+        fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+        cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
+        cbar = fig.colorbar(c0, cax=cbar_ax)
+        #cbar.set_label('more         (m)           less', rotation=90,labelpad=10)
+#fig.savefig('/Users/meilers/MITinternship/Plots/monthly_diaz.png', bbox_inches='tight', dpi=300)
         
 #%% Just for some quick plots
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
