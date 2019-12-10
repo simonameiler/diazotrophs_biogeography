@@ -14,6 +14,7 @@ import cmocean as cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+from copy import deepcopy
 
 #%% Load data
 
@@ -136,16 +137,18 @@ for i in range(len(dz_all)):
 diaz_int = np.zeros((12,23,160,360))
 for i in range(len(dz_all)):
     diaz_int[:,i,:,:] = diaz[:,i,:,:]*dz_all[i]*sec  
-    print(np.max(diaz_int[:,i,:,:]))
-    print(i)
+    #print(np.max(diaz_int[:,i,:,:]))
+    #print(i)
 diaz_int = np.sum(diaz_int,axis=1)
+diaz_std = deepcopy(diaz_int)
+diaz_std = np.std(diaz_std,axis=0)
 diaz_int = np.mean(diaz_int,axis=0)
 
 diaz_int_100 = np.zeros((12,6,160,360))
 for i in range(len(dz)):
     diaz_int_100[:,i,:,:] = diaz[:,i,:,:]*dz[i]*sec  
-    print(np.max(diaz_int_100[:,i,:,:]))
-    print(i)
+    #print(np.max(diaz_int_100[:,i,:,:]))
+    #print(i)
 diaz_int_100 = np.sum(diaz_int_100,axis=1)
 diaz_int_100 = np.mean(diaz_int_100,axis=0)
 
@@ -204,7 +207,7 @@ print(OUT)
 
 col = plt.get_cmap('RdBu_r')
 
-depth_lab = ['top 100m','entire depth range']
+depth_lab = ['mean','std']
 fig,ax = plt.subplots(2,1,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,8),sharex=True,sharey=True)
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
@@ -216,8 +219,8 @@ for i in range(0,2):
     ax[i].set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
     ax[i].set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
     ax[i].text(0.2,0.9,''+(str(depth_lab[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-c0 = ax[0].contourf(lon,lat,diaz_int_100,levels=np.linspace(0,40,21),cmap=col,extend='max')
-c1 = ax[1].contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+c0 = ax[0].contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+c1 = ax[1].contourf(lon,lat,diaz_std,levels=np.linspace(0,40,21),cmap=col,extend='max')
 #plt.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='g')
 #plt.plot(lon_d[find_bm[1]],lat_d[find_bm[0]],'.',color='r')
 #plt.plot(lon_d[find_nifH[1]],lat_d[find_nifH[0]],'.',color='c')
@@ -254,6 +257,32 @@ cbar = fig.colorbar(c0, cax=cbar_ax)
 cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nodata.png', bbox_inches='tight', dpi=300)
+
+
+#%% Plot diazotroph biomass simulated in Darwin - STD
+
+col = cm.cm.haline
+
+fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+ax.coastlines(color='#888888',linewidth=1.5)
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+ax.xaxis.set_major_formatter(lon_formatter)
+ax.yaxis.set_major_formatter(lat_formatter)
+ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+ax.text(0.2,0.9,'CV',transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax.contourf(lon,lat,diaz_std/diaz_int,levels=np.linspace(0,5,21),cmap=col,extend='max')
+#ax.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='orange',label='presence')
+#ax.plot(lon_d[absent_obs[1]],lat_d[absent_obs[0]],'.',color='m',label='absence')
+#ax.legend(loc='best')
+fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+cbar_ax = fig.add_axes([0.87, 0.12, 0.015, 0.75])
+cbar = fig.colorbar(c0, cax=cbar_ax)
+cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_std.png', bbox_inches='tight', dpi=300)
 
 #%% Plot diazotroph biomass simulated in Darwin (integrated over top 100m, averaged over 1 year) and Tang data
 
