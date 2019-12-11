@@ -9,14 +9,15 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from netCDF4 import Dataset
 import cmocean as cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from copy import deepcopy
 
-#%% Load data
+#%%############################################################################
+############### Load data from Darwin model output ############################
+###############################################################################
 
 grid = xr.open_dataset('/Users/meilers/MITinternship/Data/supply50m.nc')
 area_info = xr.open_dataset('/Users/meilers/MITinternship/Data/grid.nc')
@@ -27,6 +28,7 @@ lat = grid.lat    #needed for plotting
 area = area_info.rA
 
 # Read in diazotroph data from model - same setup as for nutrients
+# Simulation: run19_33
 # 5 diazotroph species. according to Steph TRAC30 to TRAC34
 
 months_vec = range(0,12)
@@ -54,7 +56,10 @@ for month in months_vec:
 # Sum up diazotroph data into one array
 diaz = diaz1 + diaz2 + diaz3 + diaz4 + diaz5
 
-#%% MAREDAT - Load and condense diazotroph data
+#%%############################################################################
+################# MAREDAT - Load and condense diazotroph data #################
+###############################################################################
+
 ds = xr.open_dataset('/Users/meilers/MITinternship/Data/MarEDat20130403Diazotrophs.nc',decode_times=False)
 
 # extract variables which are needed and convert/integrate
@@ -71,23 +76,35 @@ abund_tot = np.sum(abund[:,:,10:-10,:],axis=(0,1))
 bm_tot = np.sum(bm[:,:,:,:],axis=(0,1))
 nifH_tot = np.sum(nifH[:,:,10:-10,:],axis=(0,1))
 
-#%% Tang and Cassar database
+#%%############################################################################
+################### Tang and Cassar database ##################################
+###############################################################################
 
 diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_2.csv')
 #print(diazotroph_observations)
 
-longitude = pd.DataFrame(diazotroph_observations, columns = ['LONGITUDE'])
-latitude = pd.DataFrame(diazotroph_observations, columns = ['LATITUDE'])
+nifH_database = pd.DataFrame(diazotroph_observations, columns = ['LONGITUDE',
+                                                                 'LATITUDE',
+                                                                 'Trichodesmium nifH Gene (x106 copies m-2)',
+                                                                 'UCYN-A nifH Gene (x106 copies m-2)',
+                                                                 'UCYN-B nifH Gene (x106 copies m-2)',
+                                                                 'UCYN-C nifH Gene (x106 copies m-2)',
+                                                                 'Richelia nifH Gene (x106 copies m-2)',
+                                                                 'Calothrix nifH Gene  (x106 copies m-2)',
+                                                                 'Gamma nifH Gene (x106 copies/m3)'])
+#longitude = pd.DataFrame(diazotroph_observations, columns = ['LONGITUDE'])
+#latitude = pd.DataFrame(diazotroph_observations, columns = ['LATITUDE'])
 
-nifH_Tri = pd.DataFrame(diazotroph_observations, columns = ['Trichodesmium nifH Gene (x106 copies m-2)'])
-nifH_UCYN_A = pd.DataFrame(diazotroph_observations, columns = ['UCYN-A nifH Gene (x106 copies m-2)'])
-nifH_UCYN_B = pd.DataFrame(diazotroph_observations, columns = ['UCYN-B nifH Gene (x106 copies m-2)'])
-nifH_UCYN_C = pd.DataFrame(diazotroph_observations, columns = ['UCYN-C nifH Gene (x106 copies m-2)'])
-nifH_Richelia = pd.DataFrame(diazotroph_observations, columns = ['Richelia nifH Gene (x106 copies m-2)'])
-nifH_Calothrix = pd.DataFrame(diazotroph_observations, columns = ['Calothrix nifH Gene  (x106 copies m-2)'])
-nifH_Gamma = pd.DataFrame(diazotroph_observations, columns = ['Gamma nifH Gene (x106 copies/m3)'])
+#nifH_Tri = pd.DataFrame(diazotroph_observations, columns = ['Trichodesmium nifH Gene (x106 copies m-2)'])
+#nifH_UCYN_A = pd.DataFrame(diazotroph_observations, columns = ['UCYN-A nifH Gene (x106 copies m-2)'])
+#nifH_UCYN_B = pd.DataFrame(diazotroph_observations, columns = ['UCYN-B nifH Gene (x106 copies m-2)'])
+#nifH_UCYN_C = pd.DataFrame(diazotroph_observations, columns = ['UCYN-C nifH Gene (x106 copies m-2)'])
+#nifH_Richelia = pd.DataFrame(diazotroph_observations, columns = ['Richelia nifH Gene (x106 copies m-2)'])
+#nifH_Calothrix = pd.DataFrame(diazotroph_observations, columns = ['Calothrix nifH Gene  (x106 copies m-2)'])
+#nifH_Gamma = pd.DataFrame(diazotroph_observations, columns = ['Gamma nifH Gene (x106 copies/m3)'])
 
-#nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)'].values.tolist()
+# Single columns of nifH database in list format
+nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)'].values.tolist()
 nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)'].astype(np.float32)
 nifH_UCYN_A = diazotroph_observations['UCYN-A nifH Gene (x106 copies m-2)'].astype(np.float32)
 nifH_UCYN_B = diazotroph_observations['UCYN-B nifH Gene (x106 copies m-2)'].astype(np.float32)
@@ -100,6 +117,13 @@ lat_nifH = diazotroph_observations['LATITUDE'].astype(np.float32)
 #nifH = nifH_Tri + nifH_UCYN_A + nifH_UCYN_B + nifH_UCYN_C + nifH_Richelia + nifH_Calothrix + nifH_Gamma
 #nifH_sum = np.sum(nifH, axis=(1))
 
+#%% Import lat, lon, and regions file to define ocean basins/regions
+# after Teng et al., 2014
+
+regions = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/regions.csv')
+reg_lon = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/lons.csv')
+reg_lat = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/lats.csv')
+
 
 #%% Manipulating the nifH data to bring it into mappable form
 
@@ -110,17 +134,18 @@ UCYN_C_list = np.where(nifH_UCYN_C > 0)
 Richelia_list = np.where(nifH_Richelia > 0)
 Calothrix_list = np.where(nifH_Calothrix > 0)
 Gamma_list = np.where(nifH_Gamma > 0)
-lon_nifH[Tri_list[0]]
-lat_nifH[Tri_list[0]]
+#lon_nifH[Tri_list[0]]
+#lat_nifH[Tri_list[0]]
 
-#%% Absence of nifH (zeros or nan?)
-no_Tri_list = np.where(nifH_Tri > 0)
-no_UCYN_A_list = np.where(nifH_UCYN_A > 0) 
-no_UCYN_B_list = np.where(nifH_UCYN_B > 0)
-no_UCYN_C_list = np.where(nifH_UCYN_C > 0)
-no_Richelia_list = np.where(nifH_Richelia > 0)
-no_Calothrix_list = np.where(nifH_Calothrix > 0)
-no_Gamma_list = np.where(nifH_Gamma > 0)
+#%% Absence of nifH (zeros or n.d.)
+
+no_Tri_list = np.where(nifH_Tri == 0)
+no_UCYN_A_list = np.where(nifH_UCYN_A == 0) 
+no_UCYN_B_list = np.where(nifH_UCYN_B == 0)
+no_UCYN_C_list = np.where(nifH_UCYN_C == 0)
+no_Richelia_list = np.where(nifH_Richelia == 0)
+no_Calothrix_list = np.where(nifH_Calothrix == 0)
+no_Gamma_list = np.where(nifH_Gamma == 0)
 
 #%% define constants and dz
 sec = 1  #seconds per year (365.25*86400)
@@ -143,18 +168,19 @@ diaz_int = np.sum(diaz_int,axis=1)
 diaz_std = deepcopy(diaz_int)
 diaz_std = np.std(diaz_std,axis=0)
 diaz_int = np.mean(diaz_int,axis=0)
+diaz_cv = diaz_std/diaz_int
 
-diaz_int_100 = np.zeros((12,6,160,360))
-for i in range(len(dz)):
-    diaz_int_100[:,i,:,:] = diaz[:,i,:,:]*dz[i]*sec  
-    #print(np.max(diaz_int_100[:,i,:,:]))
-    #print(i)
-diaz_int_100 = np.sum(diaz_int_100,axis=1)
-diaz_int_100 = np.mean(diaz_int_100,axis=0)
+#diaz_int_100 = np.zeros((12,6,160,360))
+#for i in range(len(dz)):
+#    diaz_int_100[:,i,:,:] = diaz[:,i,:,:]*dz[i]*sec  
+#    #print(np.max(diaz_int_100[:,i,:,:]))
+#    #print(i)
+#diaz_int_100 = np.sum(diaz_int_100,axis=1)
+#diaz_int_100 = np.mean(diaz_int_100,axis=0)
 
 #%% mask where diazotroph biomass is simulated
-mask = np.where((diaz_int > 0.001*np.mean(diaz_int)), 1, 0)
-mask_out = np.where((diaz_int < 0.001*np.mean(diaz_int)), 1, 0)
+mask = np.where((diaz_int > 1e-04), 1, 0)
+mask_out = np.where((diaz_int < 1e-04), 1, 0)
 
 #%% Manipulate diazotroph data
      
@@ -202,41 +228,18 @@ lon_corr_abs = (diaz_data_list[list_idx][1]-180)%360
 # gives fraction of abundances that are within the predicted province
 OUT = np.sum(mask_out[lat_corr_abs,lon_corr_abs])/len(lat_corr_abs)
 print(OUT)
-  
-#%% Plot diazotroph biomass simulated in Darwin (integrated over top 100m, and over entire depth range; averaged over 1 year)
 
-col = plt.get_cmap('RdBu_r')
+#%% Plot diazotroph biomass simulated in Darwin - 1 subplot (mean, STD, or CV)
 
-depth_lab = ['mean','std']
-fig,ax = plt.subplots(2,1,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,8),sharex=True,sharey=True)
-lon_formatter = LongitudeFormatter(zero_direction_label=True)
-lat_formatter = LatitudeFormatter()
-for i in range(0,2):
-    ax[i].coastlines(color='#888888',linewidth=1.5)
-    ax[i].add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-    ax[i].xaxis.set_major_formatter(lon_formatter)
-    ax[i].yaxis.set_major_formatter(lat_formatter)
-    ax[i].set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
-    ax[i].set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
-    ax[i].text(0.2,0.9,''+(str(depth_lab[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-c0 = ax[0].contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
-c1 = ax[1].contourf(lon,lat,diaz_std,levels=np.linspace(0,40,21),cmap=col,extend='max')
-#plt.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='g')
-#plt.plot(lon_d[find_bm[1]],lat_d[find_bm[0]],'.',color='r')
-#plt.plot(lon_d[find_nifH[1]],lat_d[find_nifH[0]],'.',color='c')
-#plt.plot(lon_d[absent_obs[1]],lat_d[absent_obs[0]],'.',color='m')
-fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
-cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
-cbar = fig.colorbar(c0, cax=cbar_ax)
-cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
-plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nodata_alldepth.png', bbox_inches='tight', dpi=300)
+col = cm.cm.haline
 
-#%% Plot diazotroph biomass simulated in Darwin (integrated over top 100m, averaged over 1 year) with observational data
+which_index = 2 #chose which metric to plot: 0 = mean, 1 = std, 2 = cv
+which_metric = [diaz_int, diaz_std, diaz_cv]
+which_level = [np.linspace(0,40,21),np.linspace(0,20,21),np.linspace(0,5,21)]
+which_text = ['mean','std','CV']
+which_label = ['mmolC m$^{-2}$','mmolC m$^{-2}$','[-]']
 
-col = plt.get_cmap('RdBu_r')
 
-depth_lab = ['top 100m','entire depth range']
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
@@ -246,21 +249,110 @@ ax.xaxis.set_major_formatter(lon_formatter)
 ax.yaxis.set_major_formatter(lat_formatter)
 ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
-ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+ax.text(0.2,0.9,''+str(which_text[which_index])+'',transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax.contourf(lon,lat,which_metric[which_index],levels=which_level[which_index],cmap=col,extend='max')
 #ax.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='orange',label='presence')
 #ax.plot(lon_d[absent_obs[1]],lat_d[absent_obs[0]],'.',color='m',label='absence')
 #ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.015, 0.75])
 cbar = fig.colorbar(c0, cax=cbar_ax)
+cbar.set_label(''+str(which_label[which_index])+'',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_'+str(which_text[which_index])+'.png', bbox_inches='tight', dpi=300)
+
+#%% Plot diazotroph biomass simulated in Darwin (integrated over entire depth range; averaged over 1 year; STD; coefficient variation CV)
+
+#col = plt.get_cmap('RdBu_r')
+col = cm.cm.haline
+
+depth_lab = ['mean','std','CV']
+fig,ax = plt.subplots(3,1,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,9),sharex=True,sharey=True)
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+for i in range(0,3):
+    ax[i].coastlines(color='#888888',linewidth=1.5)
+    ax[i].add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+    ax[i].xaxis.set_major_formatter(lon_formatter)
+    ax[i].yaxis.set_major_formatter(lat_formatter)
+    ax[i].set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+    ax[i].set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+    ax[i].text(0.2,0.9,''+(str(depth_lab[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax[0].contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+c1 = ax[1].contourf(lon,lat,diaz_std,levels=np.linspace(0,20,21),cmap=col,extend='max')
+c2 = ax[2].contourf(lon,lat,diaz_cv,levels=np.linspace(0,5,21),cmap=col,extend='max')
+cbar0 = plt.colorbar(c0,ax=ax[0])
+cbar1 = plt.colorbar(c1,ax=ax[1])
+cbar2 = plt.colorbar(c2,ax=ax[2])
+cbar0.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+cbar1.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+cbar2.set_label('[-]',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nodata_alldepth.png', bbox_inches='tight', dpi=300)
+
+#%% Plot diazotroph biomass simulated in Darwin and Tang data for nifH gene counts
+
+col = plt.get_cmap('RdBu_r')
+
+fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+ax.coastlines(color='#888888',linewidth=1.5)
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+ax.xaxis.set_major_formatter(lon_formatter)
+ax.yaxis.set_major_formatter(lat_formatter)
+ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+#ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+ax.plot(lon_nifH[Tri_list[0]],lat_nifH[Tri_list[0]],'.',color='orange',label='Trichodesmium')
+ax.plot(lon_nifH[UCYN_A_list[0]],lat_nifH[UCYN_A_list[0]],'.',color='orange',label='UCYN-A')
+ax.plot(lon_nifH[UCYN_B_list[0]],lat_nifH[UCYN_B_list[0]],'.',color='orange',label='UCYN-B')
+ax.plot(lon_nifH[UCYN_C_list[0]],lat_nifH[UCYN_C_list[0]],'.',color='orange',label='UCYN-C')
+ax.plot(lon_nifH[Richelia_list[0]],lat_nifH[Richelia_list[0]],'.',color='orange',label='Richelia')
+ax.plot(lon_nifH[Calothrix_list[0]],lat_nifH[Calothrix_list[0]],'.',color='orange',label='Calothrix')
+ax.plot(lon_nifH[Gamma_list[0]],lat_nifH[Gamma_list[0]],'.',color='orange',label='Gamma')
+#ax.legend(loc='best')
+fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
+cbar = fig.colorbar(c0, cax=cbar_ax)
 cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
 plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nodata.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nifHpresence.png', bbox_inches='tight', dpi=300)
 
+#%% Plot diazotroph biomass simulated in Darwin and Tang data for nifH ABSENCES
 
-#%% Plot diazotroph biomass simulated in Darwin - STD
+col = plt.get_cmap('RdBu_r')
 
+fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+ax.coastlines(color='#888888',linewidth=1.5)
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+ax.xaxis.set_major_formatter(lon_formatter)
+ax.yaxis.set_major_formatter(lat_formatter)
+ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+#ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'.',color='m',label='Trichodesmium')
+ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'.',color='m',label='UCYN-A')
+ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'.',color='m',label='UCYN-B')
+ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'.',color='m',label='UCYN-C')
+ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'.',color='m',label='Richelia')
+ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'.',color='m',label='Calothrix')
+ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'.',color='m',label='Gamma')
+#ax.legend(loc='best')
+fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
+cbar = fig.colorbar(c0, cax=cbar_ax)
+cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nifHabsence.png', bbox_inches='tight', dpi=300)
+
+#%% Plot diazotroph biomass simulated in Darwin and Tang data for nifH nifH gene counts & ABSENCES
+
+#col = plt.get_cmap('RdBu_r')
 col = cm.cm.haline
 
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
@@ -272,54 +364,69 @@ ax.xaxis.set_major_formatter(lon_formatter)
 ax.yaxis.set_major_formatter(lat_formatter)
 ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
-ax.text(0.2,0.9,'CV',transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-c0 = ax.contourf(lon,lat,diaz_std/diaz_int,levels=np.linspace(0,5,21),cmap=col,extend='max')
-#ax.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='orange',label='presence')
-#ax.plot(lon_d[absent_obs[1]],lat_d[absent_obs[0]],'.',color='m',label='absence')
-#ax.legend(loc='best')
-fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
-cbar_ax = fig.add_axes([0.87, 0.12, 0.015, 0.75])
-cbar = fig.colorbar(c0, cax=cbar_ax)
-cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
-plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_std.png', bbox_inches='tight', dpi=300)
-
-#%% Plot diazotroph biomass simulated in Darwin (integrated over top 100m, averaged over 1 year) and Tang data
-
-col = plt.get_cmap('RdBu_r')
-
-depth_lab = ['top 100m','entire depth range']
-fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
-lon_formatter = LongitudeFormatter(zero_direction_label=True)
-lat_formatter = LatitudeFormatter()
-ax.coastlines(color='#888888',linewidth=1.5)
-ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-ax.xaxis.set_major_formatter(lon_formatter)
-ax.yaxis.set_major_formatter(lat_formatter)
-ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
-ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
-ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+#ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
-ax.plot(lon_nifH[Tri_list[0]],lat_nifH[Tri_list[0]],'.',color='orange',label='Trichodesmium')
-ax.plot(lon_nifH[UCYN_A_list[0]],lat_nifH[UCYN_A_list[0]],'.',color='r',label='UCYN-A')
-ax.plot(lon_nifH[UCYN_B_list[0]],lat_nifH[UCYN_B_list[0]],'.',color='g',label='UCYN-B')
-ax.plot(lon_nifH[UCYN_C_list[0]],lat_nifH[UCYN_C_list[0]],'.',color='b',label='UCYN-C')
-ax.plot(lon_nifH[Richelia_list[0]],lat_nifH[Richelia_list[0]],'.',color='m',label='Richelia')
-ax.plot(lon_nifH[Calothrix_list[0]],lat_nifH[Calothrix_list[0]],'.',color='w',label='Calothrix')
-ax.plot(lon_nifH[Gamma_list[0]],lat_nifH[Gamma_list[0]],'.',color='purple',label='Gamma')
-#ax.legend(loc='best')
+ax.plot(lon_nifH[Tri_list[0]],lat_nifH[Tri_list[0]],'.',color='orange',label='nifH presence')#label='Trichodesmium')
+ax.plot(lon_nifH[UCYN_A_list[0]],lat_nifH[UCYN_A_list[0]],'.',color='orange')#,label='UCYN-A')
+ax.plot(lon_nifH[UCYN_B_list[0]],lat_nifH[UCYN_B_list[0]],'.',color='orange')#,label='UCYN-B')
+ax.plot(lon_nifH[UCYN_C_list[0]],lat_nifH[UCYN_C_list[0]],'.',color='orange')#,label='UCYN-C')
+ax.plot(lon_nifH[Richelia_list[0]],lat_nifH[Richelia_list[0]],'.',color='orange')#,label='Richelia')
+ax.plot(lon_nifH[Calothrix_list[0]],lat_nifH[Calothrix_list[0]],'.',color='orange')#,label='Calothrix')
+ax.plot(lon_nifH[Gamma_list[0]],lat_nifH[Gamma_list[0]],'.',color='orange')#,label='Gamma')
+ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'.',color='m',label='nifH absence')#label='Trichodesmium')
+ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'.',color='m')#,label='UCYN-A')
+ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'.',color='m')#,label='UCYN-B')
+ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'.',color='m')#,label='UCYN-C')
+ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'.',color='m')#,label='Richelia')
+ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'.',color='m')#,label='Calothrix')
+ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'.',color='m')#,label='Gamma')
+ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
 cbar = fig.colorbar(c0, cax=cbar_ax)
 cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
 plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_withdata.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nifH.png', bbox_inches='tight', dpi=300)
+
+#%% Mask from Darwin biomass and nifH presence/absence
+fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
+ax.coastlines(color='#888888',linewidth=1.5)
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+c = ax.contourf(lon,lat,mask,levels=np.linspace(0,1,11),cmap=cm.cm.haline,extend='both')
+#ax.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='orange',label='presence')
+#ax.plot(lon_d[absent_obs[1]],lat_d[absent_obs[0]],'.',color='m',label='absence')
+ax.plot(lon_nifH[Tri_list[0]],lat_nifH[Tri_list[0]],'.',color='orange',label='presence')
+ax.plot(lon_nifH[UCYN_A_list[0]],lat_nifH[UCYN_A_list[0]],'.',color='orange')
+ax.plot(lon_nifH[UCYN_B_list[0]],lat_nifH[UCYN_B_list[0]],'.',color='orange')
+ax.plot(lon_nifH[UCYN_C_list[0]],lat_nifH[UCYN_C_list[0]],'.',color='orange')
+ax.plot(lon_nifH[Richelia_list[0]],lat_nifH[Richelia_list[0]],'.',color='orange')
+ax.plot(lon_nifH[Calothrix_list[0]],lat_nifH[Calothrix_list[0]],'.',color='orange')
+ax.plot(lon_nifH[Gamma_list[0]],lat_nifH[Gamma_list[0]],'.',color='orange')
+ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'.',color='m',label='absence')
+ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'.',color='m')
+ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'.',color='m')
+ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'.',color='m')
+ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'.',color='m')
+ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'.',color='m')
+ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'.',color='m')
+ax.legend(loc='best')
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+ax.xaxis.set_major_formatter(lon_formatter)
+ax.yaxis.set_major_formatter(lat_formatter)
+ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+#cbar = plt.colorbar(c,ax=ax)
+#cbar.set_label(''+str(name_nut[nut])+'',rotation=90, position=(0.5,0.5))
+plt.show()
+
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_mask_nifHpres-abs.png', bbox_inches='tight', dpi=300)
+
 
 #%% Plot diazotroph biomass from MAREDAT
 
 col = plt.get_cmap('RdBu_r')
 
-depth_lab = ['top 100m','entire depth range']
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
@@ -336,22 +443,3 @@ ax.scatter(lon_d[bm_tot[1]],lat_d[bm_tot[0]],'.',color='orange',label='presence'
 ax.legend(loc='best')
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_withdata.png', bbox_inches='tight', dpi=300)
-
-
-#%% Just for some quick plots
-fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
-ax.coastlines(color='#888888',linewidth=1.5)
-ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-c = ax.contourf(lon,lat,mask,levels=np.linspace(0,1,21),cmap=cm.cm.haline,extend='both')
-ax.plot(lon_d[find_abund[1]],lat_d[find_abund[0]],'.',color='orange',label='presence')
-ax.plot(lon_d[absent_obs[1]],lat_d[absent_obs[0]],'.',color='m',label='absence')
-ax.legend(loc='best')
-lon_formatter = LongitudeFormatter(zero_direction_label=True)
-lat_formatter = LatitudeFormatter()
-ax.xaxis.set_major_formatter(lon_formatter)
-ax.yaxis.set_major_formatter(lat_formatter)
-ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
-ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
-#cbar = plt.colorbar(c,ax=ax)
-#cbar.set_label(''+str(name_nut[nut])+'',rotation=90, position=(0.5,0.5))
-plt.show()
