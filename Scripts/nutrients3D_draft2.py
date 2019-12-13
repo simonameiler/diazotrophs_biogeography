@@ -347,24 +347,24 @@ for i in range(len(new_FeN)):
 
 
 #Fe:N
-new_FeN = np.arange(0.5,1.9,0.1) # choose the new ratio for the comparison here
-new_PN = np.arange(0.5,1.9,0.1)
-
-seg_FeN = np.arange(0.5,2.0,0.1)
-seg_PN = np.arange(0.5,2.0,0.1)
-
-area_var = np.zeros((len(seg_FeN)-1,len(seg_PN)-1))
-IN_var = np.zeros_like(area_var)
-
-for i in range(len(seg_FeN)-1):
-    for j in range(len(seg_PN)-1):
-        #bool_new[i,j] = np.where(bio_FeN_tot[:,:] > new_FeN[i], 1, 0)
-        mask_PN = np.where((bio_PN_tot[:,:] >= seg_PN[i]) & (bio_PN_tot[:,:] < seg_PN[i+1]), 1, 0)
-        mask_FeN = np.where((bio_FeN_tot[:,:] >= seg_FeN[i]) & (bio_FeN_tot[:,:] < seg_FeN[i+1]), 1, 0)
-        mask_both = mask_FeN*mask_PN
-        area_var[i,j] = np.nansum(mask_both[:,:]*area,axis=(0,1))
-        IN_var[i,j] = np.sum(mask_both[lat_corr,lon_corr])/len(lat_corr)
-        print(i)
+#new_FeN = np.arange(0.5,1.9,0.1) # choose the new ratio for the comparison here
+#new_PN = np.arange(0.5,1.9,0.1)
+#
+#seg_FeN = np.arange(0.5,2.0,0.1)
+#seg_PN = np.arange(0.5,2.0,0.1)
+#
+#area_var = np.zeros((len(seg_FeN)-1,len(seg_PN)-1))
+#IN_var = np.zeros_like(area_var)
+#
+#for i in range(len(seg_FeN)-1):
+#    for j in range(len(seg_PN)-1):
+#        #bool_new[i,j] = np.where(bio_FeN_tot[:,:] > new_FeN[i], 1, 0)
+#        mask_PN = np.where((bio_PN_tot[:,:] >= new_PN[i]) & (bio_PN_tot[:,:] < new_PN[i+1]), 1, 0)
+#        mask_FeN = np.where((bio_FeN_tot[:,:] >= new_FeN[i]) & (bio_FeN_tot[:,:] < new_FeN[i+1]), 1, 0)
+#        mask_both = mask_FeN*mask_PN
+#        area_var[i,j] = np.nansum(mask_both[:,:]*area,axis=(0,1))
+#        IN_var[i,j] = np.sum(mask_both[lat_corr,lon_corr])/len(lat_corr)
+#        print(i)
                
 #%% plot the phi values vs. the area and accuracy for diazotroph co-existence
 
@@ -513,7 +513,7 @@ colmap = plt.get_cmap('RdBu_r')
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(12,4))
 ax.coastlines(color='#888888',linewidth=1.5)
 ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-c = ax.contourf(lon,lat,np.log(nutr[nu]),levels=levs[nu],cmap=colmap,extend='both')
+c = ax.contourf(lon,lat,nutr[nu],levels=levs[nu],cmap=colmap,extend='both')
 con1 = ax.contour(lon,lat,nutr[nu],levels=[1.2],colors='k',linewidths=1,linstyle='solid')
 con2 = ax.contour(lon,lat,nutr[nu],levels=[2.5],colors='r',linewidths=1,linstyle='solid')
 

@@ -80,11 +80,13 @@ nifH_tot = np.sum(nifH[:,:,10:-10,:],axis=(0,1))
 ################### Tang and Cassar database ##################################
 ###############################################################################
 
-diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_2.csv')
+diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_mod.csv')
 #print(diazotroph_observations)
 
 nifH_database = pd.DataFrame(diazotroph_observations, columns = ['LONGITUDE',
                                                                  'LATITUDE',
+                                                                 'YEAR',
+                                                                 'MONTH',
                                                                  'Trichodesmium nifH Gene (x106 copies m-2)',
                                                                  'UCYN-A nifH Gene (x106 copies m-2)',
                                                                  'UCYN-B nifH Gene (x106 copies m-2)',
@@ -104,7 +106,7 @@ nifH_database = pd.DataFrame(diazotroph_observations, columns = ['LONGITUDE',
 #nifH_Gamma = pd.DataFrame(diazotroph_observations, columns = ['Gamma nifH Gene (x106 copies/m3)'])
 
 # Single columns of nifH database in list format
-nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)'].values.tolist()
+#nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)'].values.tolist()
 nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)'].astype(np.float32)
 nifH_UCYN_A = diazotroph_observations['UCYN-A nifH Gene (x106 copies m-2)'].astype(np.float32)
 nifH_UCYN_B = diazotroph_observations['UCYN-B nifH Gene (x106 copies m-2)'].astype(np.float32)
@@ -114,8 +116,32 @@ nifH_Calothrix = diazotroph_observations['Calothrix nifH Gene  (x106 copies m-2)
 nifH_Gamma = diazotroph_observations['Gamma nifH Gene (x106 copies/m3)'].astype(np.float32)
 lon_nifH = diazotroph_observations['LONGITUDE'].astype(np.float32)
 lat_nifH = diazotroph_observations['LATITUDE'].astype(np.float32)
+year = diazotroph_observations['YEAR'].astype(np.float32)
+month = diazotroph_observations['MONTH'].astype(np.float32)
 #nifH = nifH_Tri + nifH_UCYN_A + nifH_UCYN_B + nifH_UCYN_C + nifH_Richelia + nifH_Calothrix + nifH_Gamma
 #nifH_sum = np.sum(nifH, axis=(1))
+
+#%%compile the nifH data of different species into 1 matrix
+var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
+nifH_matrix = np.zeros((len(nifH_Tri),len(var_list)+1))
+for i in range(len(var_list)):
+    nifH_matrix[:,i] = var_list[i]
+
+# find datapoints where no nifH gene is found at all (loop over all species)
+for j in range(len(nifH_Tri)):
+    if np.nansum(nifH_matrix[j,4:11]) > 0:
+        nifH_matrix[j,-1] = 1
+
+# create list of indices of nifH presences and absences. Can be used for plotting or further data manipulation
+presence = np.where(nifH_matrix[:,-1] > 0)
+absence = np.where(nifH_matrix[:,-1] == 0)
+
+
+#%% Presence/absence on monthly time scales
+# find a way to display the data on monthly scales
+pres_month = nifH_matrix[presence,3]
+abs_month = nifH_matrix[absence,3]
+
 
 #%% Import lat, lon, and regions file to define ocean basins/regions
 # after Teng et al., 2014
@@ -125,7 +151,7 @@ reg_lon = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/lons.csv')
 reg_lat = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/lats.csv')
 
 
-#%% Manipulating the nifH data to bring it into mappable form
+#%% Manipulating the nifH data to bring it into mappable form - species specific
 
 Tri_list = np.where(nifH_Tri > 0)
 UCYN_A_list = np.where(nifH_UCYN_A > 0) 
@@ -335,13 +361,13 @@ ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
-ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'.',color='m',label='Trichodesmium')
-ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'.',color='m',label='UCYN-A')
-ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'.',color='m',label='UCYN-B')
-ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'.',color='m',label='UCYN-C')
-ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'.',color='m',label='Richelia')
-ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'.',color='m',label='Calothrix')
-ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'.',color='m',label='Gamma')
+ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'x',color='m',label='Trichodesmium')
+ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'x',color='m',label='UCYN-A')
+ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'x',color='m',label='UCYN-B')
+ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'x',color='m',label='UCYN-C')
+ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'x',color='m',label='Richelia')
+ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'x',color='m',label='Calothrix')
+ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'x',color='m',label='Gamma')
 #ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
@@ -366,6 +392,39 @@ ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+ax.plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='any nifH present')#label='Trichodesmium')
+ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='all nifH absent')
+ax.legend(loc='best')
+fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
+cbar = fig.colorbar(c0, cax=cbar_ax)
+cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nifH.png', bbox_inches='tight', dpi=300)
+
+#%% Plot diazotroph biomass simulated in Darwin and Tang data for nifH nifH gene counts & ABSENCES
+
+#col = plt.get_cmap('RdBu_r')
+col = cm.cm.haline
+
+fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+ax.coastlines(color='#888888',linewidth=1.5)
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+ax.xaxis.set_major_formatter(lon_formatter)
+ax.yaxis.set_major_formatter(lat_formatter)
+ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+#ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
+ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'x',color='m',label='nifH absence')#label='Trichodesmium')
+ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'x',color='m')#,label='UCYN-A')
+ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'x',color='m')#,label='UCYN-B')
+ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'x',color='m')#,label='UCYN-C')
+ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'x',color='m')#,label='Richelia')
+ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'x',color='m')#,label='Calothrix')
+ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'x',color='m')#,label='Gamma')
 ax.plot(lon_nifH[Tri_list[0]],lat_nifH[Tri_list[0]],'.',color='orange',label='nifH presence')#label='Trichodesmium')
 ax.plot(lon_nifH[UCYN_A_list[0]],lat_nifH[UCYN_A_list[0]],'.',color='orange')#,label='UCYN-A')
 ax.plot(lon_nifH[UCYN_B_list[0]],lat_nifH[UCYN_B_list[0]],'.',color='orange')#,label='UCYN-B')
@@ -373,13 +432,6 @@ ax.plot(lon_nifH[UCYN_C_list[0]],lat_nifH[UCYN_C_list[0]],'.',color='orange')#,l
 ax.plot(lon_nifH[Richelia_list[0]],lat_nifH[Richelia_list[0]],'.',color='orange')#,label='Richelia')
 ax.plot(lon_nifH[Calothrix_list[0]],lat_nifH[Calothrix_list[0]],'.',color='orange')#,label='Calothrix')
 ax.plot(lon_nifH[Gamma_list[0]],lat_nifH[Gamma_list[0]],'.',color='orange')#,label='Gamma')
-ax.plot(lon_nifH[no_Tri_list[0]],lat_nifH[no_Tri_list[0]],'.',color='m',label='nifH absence')#label='Trichodesmium')
-ax.plot(lon_nifH[no_UCYN_A_list[0]],lat_nifH[no_UCYN_A_list[0]],'.',color='m')#,label='UCYN-A')
-ax.plot(lon_nifH[no_UCYN_B_list[0]],lat_nifH[no_UCYN_B_list[0]],'.',color='m')#,label='UCYN-B')
-ax.plot(lon_nifH[no_UCYN_C_list[0]],lat_nifH[no_UCYN_C_list[0]],'.',color='m')#,label='UCYN-C')
-ax.plot(lon_nifH[no_Richelia_list[0]],lat_nifH[no_Richelia_list[0]],'.',color='m')#,label='Richelia')
-ax.plot(lon_nifH[no_Calothrix_list[0]],lat_nifH[no_Calothrix_list[0]],'.',color='m')#,label='Calothrix')
-ax.plot(lon_nifH[no_Gamma_list[0]],lat_nifH[no_Gamma_list[0]],'.',color='m')#,label='Gamma')
 ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
