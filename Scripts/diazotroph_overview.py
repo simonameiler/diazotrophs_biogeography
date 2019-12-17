@@ -151,7 +151,7 @@ reg_lon = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/lons.csv')
 reg_lat = pd.read_csv(r'/Users/meilers/MITinternship/Data/Regions/lats.csv')
 
 
-#%% Manipulating the nifH data to bring it into mappable form - species specific
+#%% Manipulating the nifH data to bring it into mappable form - SPECIES SPECIFIC
 
 Tri_list = np.where(nifH_Tri > 0)
 UCYN_A_list = np.where(nifH_UCYN_A > 0) 
@@ -376,7 +376,9 @@ cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nifHabsence.png', bbox_inches='tight', dpi=300)
 
-#%% Plot diazotroph biomass simulated in Darwin and Tang data for nifH nifH gene counts & ABSENCES
+#%%############################################################################ 
+################### Best figure for now #######################################
+###############################################################################
 
 #col = plt.get_cmap('RdBu_r')
 col = cm.cm.haline
