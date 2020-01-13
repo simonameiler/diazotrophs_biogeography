@@ -14,6 +14,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from copy import deepcopy
+import scipy.interpolate as si
 
 #%%############################################################################
 ############### Load data from Darwin model output ############################
@@ -136,6 +137,32 @@ for j in range(len(nifH_Tri)):
 presence = np.where(nifH_matrix[:,-1] > 0)
 absence = np.where(nifH_matrix[:,-1] == 0)
 
+# get lon, lat of presence and absence
+lon_pres = lon_nifH[presence[0]].astype(np.float32)
+lat_pres = lat_nifH[presence[0]].astype(np.float32)
+lon_abs = lon_nifH[absence[0]]
+lat_abs = lat_nifH[absence[0]]
+
+#%% create inteprolator
+grid = xr.open_dataset('/Users/meilers/MITinternship/Data/grid.nc')
+lon = grid.X.values
+lat = grid.Y.values
+vals = grid.XC.values  # for testing - replace by data to be interpolated
+
+I = si.RegularGridInterpolator((lat, lon), vals, 'nearest',
+                               bounds_error=False, fill_value=None)
+
+# where to evaluate data
+#lon_d = np.r_[0., 10., 20.]
+#lat_d = np.r_[-80., 0., 10.]
+
+n_d = len(lon_pres)
+latlon = np.zeros((n_d, 2))
+latlon[:,0] = lat_pres
+latlon[:,1] = np.mod(lon_pres, 360.)
+
+# interpolate
+vals_d = I(latlon)
 
 #%% Presence/absence on monthly time scales
 # find a way to display the data on monthly scales
@@ -254,6 +281,26 @@ lon_corr_abs = (diaz_data_list[list_idx][1]-180)%360
 # gives fraction of abundances that are within the predicted province
 OUT = np.sum(mask_out[lat_corr_abs,lon_corr_abs])/len(lat_corr_abs)
 print(OUT)
+
+
+#%% Same IN/OUT calculation for Tang and Cassar data
+
+#lat_corr = diaz_data_list[list_idx][0]
+#lon_corr = diaz_data_list[list_idx][1]-180 #would also work...the option with %360 is nicer though
+#lon_corr = (diaz_data_list[list_idx][1]-180)%360
+# gives fraction of abundances that are within the predicted province
+IN_nifH = np.sum(mask[lat_nifH,lon_nifH])/len(lat_nifH)
+print(IN_nifH)
+
+#%% Calculate accuracy for absences
+list_idx = 4
+lat_corr_abs = diaz_data_list[list_idx][0]
+#lon_corr = diaz_data_list[list_idx][1]-180 #would also work...the option with %360 is nicer though
+lon_corr_abs = (diaz_data_list[list_idx][1]-180)%360
+# gives fraction of abundances that are within the predicted province
+OUT = np.sum(mask_out[lat_corr_abs,lon_corr_abs])/len(lat_corr_abs)
+print(OUT)
+
 
 #%% Plot diazotroph biomass simulated in Darwin - 1 subplot (mean, STD, or CV)
 
