@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 23 17:11:35 2020
+
+@author: meilers
+"""
+import numpy as np
+import xarray as xr
+import matplotlib.pyplot as plt
+from skimage import measure
+
+#%% Create new mask of regions from Darwin model output
+
+# Read in monthly nutrient data
+
+months_vec = range(0,12)
+mon_list = ['26160','26400','26640','26880','27120','27360','27600','27840','28080','28320','28560','28800']
+sec = 31557600
+
+maxdep = 30.
+
+# load grid information for vertical mean and land mask
+with xr.open_dataset('/Users/meilers/MITinternship/Data/grid.nc') as ds:
+    drf = ds.drF[:]
+    hfc = ds.HFacC[:]
+
+rbot = np.cumsum(drf).clip(0., maxdep)
+drf = rbot - np.r_[0., rbot[:-1]]
+dr = drf*hfc
+drtot = dr.sum('Z')
+# land mask
+lm = drtot == 0
+
+# create empty arrays to next fill with the nutrient data from the model
+PO4 = np.zeros((len(months_vec),160,360))
+S_PO4 = np.zeros((len(months_vec),160,360))
+
+# Open dataset and load values for each nutrient (top 100m --> 0:6 of depth dimension)
+i = 0
+for month in months_vec:
+    data = xr.open_dataset('/Users/meilers/MITinternship/Data/run19_33_MONTH/nutr_tend.00000'+str(mon_list[month])+'.nc')
+    PO4[month,:,:] = (data.gTr05.values[0,:,:,:]*dr).sum('Z')/drtot
+    S_PO4[month,:,:] = (data.S_PO4.values[0,:,:,:]*dr).sum('Z')/drtot
+    data.close()
+    print('Month: '+str(month)) #as control if loop works
+    i += 1
+
+PO4_t = np.add(PO4,S_PO4)   # sum the two PO4 sources up 
+PO4_tot = np.mean(PO4_t,axis=0)*sec # create annual mean of total PO4
+
+thresh = 0.3 #mmol/m3
+
+#PO4_tot_above = np.where((PO4_tot > thresh), 1, 0)
+#PO4_tot_below = np.where((PO4_tot < thresh), 1, 0)
+
+#%% create the regions with the measure.label function from skimage
+
+### HOW CAN I SET THE CONTINENTS TO BACKGROUND?
+### HOW CAN I INCORPORATE THE THRESHOLD?
+
+# make integer array with 1 for below and 2 for above threshold, will set land to 0
+PO4_tot_hilo = np.where(PO4_tot > thresh, 2, 1)
+
+# set land points to zero
+PO4_tot_hilo[lm] = 0
+
+mask_darwin = measure.label(PO4_tot_hilo, neighbors=None, background=0, return_num=False, connectivity=None)
+mask_darwin0 = mask_darwin.copy()
+
+mask_darwin.astype('int64').tofile('mask_darwin0.int64_360x160.bin')
+
+hl = PO4_tot_hilo.copy()
+nreg = np.array([(mask_darwin==i).sum() for i in range(mask_darwin.max()+1)])
+while nreg.min() < 20:
+    i = nreg.argmin()
+    mi = mask_darwin==i
+    hl[mi] = 3 - hl[mi]
+    mask_darwin = measure.label(hl, neighbors=None, background=0, return_num=False, connectivity=None)
+    nreg = np.array([(mask_darwin==i).sum() for i in range(mask_darwin.max()+1)])
+    print(mask_darwin.max(), nreg.min())
+
+mask_darwin[mask_darwin==mask_darwin[-1,0]] = mask_darwin[-1,-1]
+mask_darwin[mask_darwin==mask_darwin[140,0]] = mask_darwin[140,-1]
+mask_darwin[mask_darwin==mask_darwin[118,0]] = mask_darwin[118,-1]
+
+for i in range(mask_darwin.max()):
+    if i > mask_darwin.max():
+        break
+    if np.sum(mask_darwin==i) == 0:
+        mx = mask_darwin.max()
+        mask_darwin[mask_darwin==mx] = i
+
+mask_darwin.astype('int64').tofile('mask_darwin.int64_360x160.bin')
+
+#%% Just for some quick plots
+fig,ax = plt.subplots(figsize=(9,6))
+#c = ax.contourf(mask_darwin)
+c = ax.imshow(mask_darwin, interpolation='none')
+cbar = plt.colorbar(c,ax=ax)
+plt.show()
