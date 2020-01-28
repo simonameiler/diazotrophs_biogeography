@@ -112,6 +112,15 @@ mytypes = [
 nifH = diazotroph_observations[mytypes]
 nifH_sum = nifH.sum(1)
 
+#%% Conversion factors for nifH abundance to biomass
+
+tri_low = 1.2165e-05
+tri_high = 3.4722e-02
+UCYN_low = 1.3888e-05
+UCYN_high = 3.2407e-04
+Ric_low = 5.75e-07
+Ric_high = 1.0916e-05
+
 #%%compile the nifH data of different species into 1 matrix
 var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
 nifH_matrix = np.zeros((len(nifH_Tri),len(var_list)+1))
@@ -214,6 +223,17 @@ fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 for i in regs:
     ax.boxplot(nifH_sum[nifH_reg==i], labels=str(regs[i]), whis='range')
 
+
+#%% What to display in the boxplots
+# 1 for each region & for each species = 11 x 4 subplots
+# in each subplot: 3 bars; 
+#   1) range of nifH values, 2) conversion of nifH to biomass, 3) biomass from Darwin
+#   for 2) show min and max of the converted nifH data. step a) pack the data of both conversion
+#   factors into one list (or row of array) and display min and max (and mean) of this combined range
+#   (that is to say, there will be the double of datapoints in this category.)
+# formatting: make boxplots but show full range of bars (no whiskers and outliers), show mean; work
+#   with two axes. left nifH, right biomass
+
 #%% DRAFTS AND BITS OF PIECES OF CODE ... 
 # try to find right index to chose regions
 #np.min(obs_regs[obs_regs[:,2]==6])
@@ -224,7 +244,7 @@ for i in regs:
 nifH_reg6 = nifH[nifH_reg==6]
 
 #OJ: end
-
+test = nifH_Tri*tri_low
 
 lat_reg6 = obs_regs[obs_regs[:,2]==6][:,0]
 lon_reg6 = obs_regs[obs_regs[:,2]==6][:,1]
