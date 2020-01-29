@@ -59,11 +59,10 @@ for month in months_vec:
 # Sum up diazotroph data into one array
 diaz = diaz1 + diaz2 + diaz3 + diaz4 + diaz5
 
-    
-#%% sum nutrients up over depth and multiply with corresponding dz
+#%% sum diazotrophs up over depth and multiply with corresponding dz
 
 #OJ: shorter (xarray is smart about matching dimensions)
-#diaz_int = (diaz*dz_all).sum('Z')
+#diaz_int = (diaz*dz_all).sum('Z') # SM: this does not work...
 diaz_int = np.zeros((12,23,160,360))
 for i in range(len(dz_all)):
     diaz_int[:,i,:,:] = diaz[:,i,:,:]*dz_all[i].values  
@@ -84,7 +83,6 @@ diaz_cv = diaz_std/diaz_int
 diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_mod.csv')
 #print(diazotroph_observations)
 
-#OJ: why degrade precision to float32?
 # Single columns of nifH database in list format
 nifH_Tri = diazotroph_observations['Trichodesmium nifH Gene (x106 copies m-2)']
 nifH_UCYN_A = diazotroph_observations['UCYN-A nifH Gene (x106 copies m-2)']
@@ -108,6 +106,13 @@ mytypes = [
     'Gamma nifH Gene (x106 copies/m3)',
     ]
 
+mytypes_short = [
+    'Trichodesmium nifH Gene (x106 copies m-2)',
+    'UCYN-A nifH Gene (x106 copies m-2)',
+    'UCYN-B nifH Gene (x106 copies m-2)',
+    'Richelia nifH Gene (x106 copies m-2)',
+    ]
+
 #OJ: this skips NaNs while summing
 nifH = diazotroph_observations[mytypes]
 nifH_sum = nifH.sum(1)
@@ -120,6 +125,9 @@ UCYN_low = 1.3888e-05
 UCYN_high = 3.2407e-04
 Ric_low = 5.75e-07
 Ric_high = 1.0916e-05
+
+conversion_low = [tri_low, UCYN_low, UCYN_low, Ric_low]
+conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
 #%% Converted nifH to biomass values
 bm_Tri = nifH_Tri*tri_low
@@ -156,8 +164,14 @@ lat_abs = lat_nifH[absence[0]]
 #reg_lat = lat
 
 regions = pd.read_csv('/Users/meilers/MITinternship/Data/Regions/regions.csv', header=None).values
-reg_lon = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lons.csv', delimiter=',')
-reg_lat = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lats.csv', delimiter=',')
+reg_lon = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lons.csv', delimiter=',').astype(int)
+reg_lat = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lats.csv', delimiter=',').astype(int)
+
+# Show mask 
+fig,ax = plt.subplots(figsize=(9,6))
+c = ax.imshow(regions, interpolation='none')
+cbar = plt.colorbar(c,ax=ax)
+plt.show()
 
 #%% create interpolator
 I = si.RegularGridInterpolator((reg_lat, reg_lon), regions, 'nearest',
@@ -171,53 +185,18 @@ latlon = np.zeros((n_d, 2))
 latlon[:,0] = lat_nifH
 latlon[:,1] = np.mod(lon_nifH, 360.)
 
-#repeat for different species
-# 1) Trichodesmium
-n_d_Tri = len(lon_nifH[nifH_Tri>0])
-latlon_Tri = np.zeros((n_d_Tri, 2))
-latlon_Tri[:,0] = lat_nifH[nifH_Tri>0]
-latlon_Tri[:,1] = np.mod(lon_nifH[nifH_Tri>0], 360.)
-
-# 2) UCYN_A
-n_d_UCYN_A = len(lon_nifH[nifH_UCYN_A>0])
-latlon_UCYN_A = np.zeros((n_d_UCYN_A, 2))
-latlon_UCYN_A[:,0] = lat_nifH[nifH_UCYN_A>0]
-latlon_UCYN_A[:,1] = np.mod(lon_nifH[nifH_UCYN_A>0], 360.)
-
-# 3) UCYN_B
-n_d_UCYN_B = len(lon_nifH[nifH_UCYN_B>0])
-latlon_UCYN_B = np.zeros((n_d_UCYN_B, 2))
-latlon_UCYN_B[:,0] = lat_nifH[nifH_UCYN_B>0]
-latlon_UCYN_B[:,1] = np.mod(lon_nifH[nifH_UCYN_B>0], 360.)
-
-# 4) Richelia
-n_d_Richelia = len(lon_nifH[nifH_Richelia>0])
-latlon_Richelia = np.zeros((n_d_Richelia, 2))
-latlon_Richelia[:,0] = lat_nifH[nifH_Richelia>0]
-latlon_Richelia[:,1] = np.mod(lon_nifH[nifH_Richelia>0], 360.)
-
 # interpolate
 nifH_reg = I(latlon).astype(int)
 
-nifH_reg_Tri = I(latlon_Tri).astype(int)
-nifH_reg_UCYN_A = I(latlon_UCYN_A).astype(int)
-nifH_reg_UCYN_B = I(latlon_UCYN_B).astype(int)
-nifH_reg_Richelia = I(latlon_Richelia).astype(int)
+nifH_reg_Tri = nifH_reg[nifH_Tri>0]
+nifH_reg_UCYN_A = nifH_reg[nifH_UCYN_A>0]
+nifH_reg_UCYN_B = nifH_reg[nifH_UCYN_B>0]
+nifH_reg_Richelia = nifH_reg[nifH_Richelia>0]
 
-#%% stack lat, lon and assigned regions for observations into one matrix - not sure yet if that's necessary or useful...
-#obs_regs = np.zeros((n_d,3))
-#obs_regs[:,0] = lat_nifH
-#obs_regs[:,1] = np.mod(lon_nifH, 360.)
-#obs_regs[:,2] = vals_d
 
 #%%############################################################################
 ################### Analyses of nifH data #####################################
 ###############################################################################
-
-# PPROBLEM 3: THE ACTUAL ANALYSES
-# IDEA FOR  FIRST ANALYSIS:
-# show range of nifH abundances per region (boxplots) and compare it with Darwin output
-# for the same region (ranges of diazotroph biomass)
 
 def statsfun(x, label):
     stats = {
@@ -231,14 +210,8 @@ def statsfun(x, label):
         }
     return stats
 
-
 # Make boxplots for the regions
 regs = np.arange(0,12,1)
-
-fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
-for i in regs:
-    if np.sum(nifH_reg==i) > 0:
-        ax.boxplot(nifH_sum[nifH_reg==i], positions=[i], labels=str(regs[i]), whis='range')
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 for i in regs:
@@ -273,7 +246,88 @@ for i in regs:
 
 ax.bxp(bxpstats, showmeans=True, showfliers=False, meanline=True)
 
+#%% Show results for one species in all regions
+import matplotlib as mpl
+mpl.rcParams['font.size'] = 10
+mpl.rcParams['legend.fontsize'] = 'medium'
+mpl.rcParams['figure.titlesize'] = 'medium'
 
+# chose species (0=Trichodesmium, 1=UCYN_A, 2=UCYN_B, 3=Richlia)
+species = 0
+species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
+specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
+#set axes limits
+#ymin = 0
+#ymax = max(nifH[mytypes_short[species]])
+#y2min = 0
+#y2max = max(nifH[mytypes_short[species]]*tri_high)
+
+fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
+bxpstats = []
+ax.set_ylabel('nifH Gene (x106 copies m-2)')
+ax.set_title('nifH abundance and biomass: '+str(species_labels[species]))
+#ax.set_ylim([ymin,ymax])
+ax2 = ax.twinx()
+ax2.set_ylabel('biomass (mmol C m-2)')
+#ax2.set_ylim([y2min,y2max])
+
+for i in regs:
+    if np.sum(nifH_reg==i) > 0:
+        nif = nifH[mytypes_short[species]][nifH_reg==i]
+        bm = (nifH[mytypes_short[species]][nifH_reg==i]*tri_low).append(nifH[mytypes_short[species]][nifH_reg==i]*tri_high)
+        nif_stats = statsfun(nif,str(regs[i]))
+        bm_stats = statsfun(bm,str(regs[i]))
+#        nif_stats = statsfun(nif,'nifH'+str(regs[i]))
+#        bm_stats = statsfun(bm,'bm'+str(regs[i]))
+        ax.bxp([nif_stats], positions=[i-0.25], showmeans=True, showfliers=False, meanline=True)
+        ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True)
+
+#%% Show results for all species per region
+
+# chose regions (0-12)
+reg_num = 9
+
+fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
+bxpstats = []
+ax.set_ylabel('nifH Gene (x106 copies m-2)')
+ax.set_title('nifH abundance and biomass: region '+str(reg_num))
+#ax.set_ylim([ymin,ymax])
+ax2 = ax.twinx()
+ax2.set_ylabel('biomass (mmol C m-2)')
+#ax2.set_ylim([y2min,y2max])
+
+for i in range(0,len(mytypes_short)):
+    if np.sum(nifH[mytypes_short[i]][nifH_reg==reg_num]) > 0:
+        nif = nifH[mytypes_short[i]][nifH_reg==reg_num]
+        bm = (nifH[mytypes_short[i]][nifH_reg==reg_num]*conversion_low[i]).append(nifH[mytypes_short[i]][nifH_reg==i]*conversion_high[i])
+        nif_stats = statsfun(nif,str(specs_labels[i]))
+        bm_stats = statsfun(bm,str(specs_labels[i]))
+#        nif_stats = statsfun(nif,'nifH'+str(regs[i]))
+#        bm_stats = statsfun(bm,'bm'+str(regs[i]))
+        ax.bxp([nif_stats], positions=[i-0.25], showmeans=True, showfliers=False, meanline=True)
+        ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True)
+
+#%% show all
+
+# FIX SECONDARY AXIS IN LOOP
+
+fig,ax = plt.subplots(nrows=4, ncols=1,figsize=(9, 9))
+bxpstats = []
+
+for i in range(0,len(mytypes_short)):
+    if np.sum(nifH[mytypes_short[i]][nifH_reg==reg_num]) > 0:
+        for j in regs:
+            if np.sum(nifH_reg==j) > 0:
+                nif = nifH[mytypes_short[i]][nifH_reg==j]
+                bm = (nifH[mytypes_short[i]][nifH_reg==j]*tri_low).append(nifH[mytypes_short[i]][nifH_reg==j]*tri_high)
+                nif_stats = statsfun(nif,str(regs[j]))
+                bm_stats = statsfun(bm,str(regs[j]))
+#                nif_stats = statsfun(nif,'nifH'+str(regs[i]))
+#                bm_stats = statsfun(bm,'bm'+str(regs[i]))
+                ax[i].bxp([nif_stats], positions=[j-0.25], showmeans=True, showfliers=False, meanline=True)
+                ax2 = ax[i].twinx()
+                ax2.bxp([bm_stats], positions=[j+0.25], showmeans=True, showfliers=False, meanline=True)
+               
 #%% What to display in the boxplots
 # 1 for each region & for each species = 11 x 4 subplots
 # in each subplot: 3 bars; 
@@ -336,6 +390,8 @@ no_Gamma_list = np.where(nifH_Gamma == 0)
 mask = np.where((diaz_int > 1e-04), 1, 0)
 mask_out = np.where((diaz_int < 1e-04), 1, 0)
 
+
+#SM: What are the correct values for lat, lon here?
 I_in = si.RegularGridInterpolator((reg_lat, reg_lon), mask, 'nearest',
                                bounds_error=False, fill_value=None)
 
@@ -372,6 +428,9 @@ print(False_Pos)
 # check if total okay
 print(IN + False_Neg)
 print(OUT + False_Pos)
+
+# SM: to calculate the values for coincide from IN and OUT - just to double check
+# ((OUT*len(absence[0]))+(IN*len(presence[0])))/(len(nifH_sum))
 
 #%%############################################################################ 
 ################### Best figure for now #######################################

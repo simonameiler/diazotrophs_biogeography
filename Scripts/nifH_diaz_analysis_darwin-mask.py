@@ -142,27 +142,25 @@ lat_pres = lat_nifH[presence[0]]
 lon_abs = lon_nifH[absence[0]]
 lat_abs = lat_nifH[absence[0]]
 
-#%% Import lat, lon, and regions file to define ocean basins/regions
-# after Teng et al., 2014
-
-# PROBLEM 2: CREATE THE REGIONS FROM DARWIN --> SCRIPT make_mask.py
-# import regions file (and lat, lon of course too) from Darwin as soon as it's ready
+#%% Prepare interpolator - Regions from Darwin mask
 
 darwin_lon = np.mod(lon, 360.)
 darwin_lat = lat
-
-#regions = pd.read_csv('/Users/meilers/MITinternship/Data/Regions/regions.csv', header=None).values
-#reg_lon = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lons.csv', delimiter=',')
-#reg_lat = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lats.csv', delimiter=',')
+regions = np.fromfile('mask_darwin.int64_360x160.bin', 'int64').reshape(160, 360)
 
 j, i = np.mgrid[:160, :360]
+
+# Show mask 
+fig,ax = plt.subplots(figsize=(9,6))
+c = ax.imshow(regions, interpolation='none')
+cbar = plt.colorbar(c,ax=ax)
+plt.show()
+
 #%% create interpolator
 Ii = si.RegularGridInterpolator((darwin_lat, darwin_lon), i, 'nearest',
                                 bounds_error=False, fill_value=None)
 Ij = si.RegularGridInterpolator((darwin_lat, darwin_lon), j, 'nearest',
                                 bounds_error=False, fill_value=None)
-
-
 n_d = len(lon_nifH)
 latlon = np.zeros((n_d, 2))
 latlon[:,0] = lat_nifH
@@ -358,46 +356,53 @@ no_Richelia_list = np.where(nifH_Richelia == 0)
 no_Calothrix_list = np.where(nifH_Calothrix == 0)
 no_Gamma_list = np.where(nifH_Gamma == 0)
 
-#%% mask where Darwin diazotroph biomass is simulated
+#%%############################################################################
+### Quantify how many of the nifH abundances are in the predicted province ####
+###############################################################################
+
+# mask where Darwin diazotroph biomass is simulated
 mask = np.where((diaz_int > 1e-04), 1, 0)
 mask_out = np.where((diaz_int < 1e-04), 1, 0)
 
-I = si.RegularGridInterpolator((darwin_lat, darwin_lon), mask, 'nearest',
+I_in = si.RegularGridInterpolator((darwin_lat, darwin_lon), mask, 'nearest',
                                bounds_error=False, fill_value=None)
-mask_darwin_nifH = I(latlon).astype(int)
+
+mask_darwin_nifH = I_in(latlon).astype(int)
 mask_nifH = np.where(nifH_sum > 0, 1, 0)
 
 ncoincide = np.sum(mask_nifH == mask_darwin_nifH)
+COR = ncoincide/len(nifH)
+print(COR)
 
-
-mask_darwin_nifH = I(latlon).astype(bool)
+mask_darwin_nifH = I_in(latlon).astype(bool)
 mask_nifH = nifH_sum > 0
 
 nboth = np.sum(mask_nifH & mask_darwin_nifH)
 nonlydarwin = np.sum((~mask_nifH) & mask_darwin_nifH)
+nnon = np.sum((~mask_nifH) & ~mask_darwin_nifH)
+nonlynifH = np.sum((mask_nifH) & ~mask_darwin_nifH)
 
-
-#%%############################################################################
-### Quantify how many of the nifH abundances are in the predicted province ####
-############### DOES NOT WORK YET !!!!!########################################
-
-# PROBLEM 4: FIND A MEASURE FOR THE ACCURACY OF DARWIN AND CALCULATE HOW MANY
-# OBSERVATIONS ARE SIMULATED CORRECTLY (IN THE PRESENCE-ABSENCE SPACE)
-
-# careful: make sure to get lon/lat consistent!!!
-
-#lat_corr = diaz_data_list[list_idx][0]
-#lon_corr = diaz_data_list[list_idx][1]-180 #would also work...the option with %360 is nicer though
-#lon_corr = (diaz_data_list[list_idx][1]-180)%360
-# gives fraction of abundances that are within the predicted province
-IN = np.sum(mask[lat_pres,lon_pres])/len(lat_pres)
+#%% Do the math
+IN = nboth/len(presence[0])
 print(IN)
 
-#%% Calculate accuracy for absences
-
-OUT = np.sum(mask_out[lat_abs,lon_abs])/len(lat_abs)
+OUT = nnon/len(absence[0])
 print(OUT)
 
+# nifH absence but Darwin presence
+False_Neg = nonlynifH/len(presence[0])
+print(False_Neg)
+
+# nifH presence but Darwin absence
+False_Pos = nonlydarwin/len(absence[0])
+print(False_Pos)
+
+# check if total okay
+print(IN + False_Neg)
+print(OUT + False_Pos)
+
+# SM: to calculate the values for coincide from IN and OUT - just to double check
+# ((OUT*len(absence[0]))+(IN*len(presence[0])))/(len(nifH_sum))
 
 #%%############################################################################ 
 ################### Best figure for now #######################################
