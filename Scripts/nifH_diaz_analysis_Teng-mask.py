@@ -253,7 +253,7 @@ mpl.rcParams['legend.fontsize'] = 'medium'
 mpl.rcParams['figure.titlesize'] = 'medium'
 
 # chose species (0=Trichodesmium, 1=UCYN_A, 2=UCYN_B, 3=Richlia)
-species = 0
+species = 1
 species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
 specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
 #set axes limits
@@ -285,7 +285,7 @@ for i in regs:
 #%% Show results for all species per region
 
 # chose regions (0-12)
-reg_num = 9
+reg_num = 0
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 bxpstats = []
