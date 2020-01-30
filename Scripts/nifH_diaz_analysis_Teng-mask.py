@@ -38,11 +38,11 @@ dz_all = grid.drF
 months_vec = range(0,12)
 mon_list = ['26160','26400','26640','26880','27120','27360','27600','27840','28080','28320','28560','28800']
 
-diaz1 = np.zeros((len(months_vec),23,160,360))
+diaz1 = np.zeros((len(months_vec),23,160,360)) #smallest diazotroph --> Crocosphaera (UCYN-B)
 diaz2 = np.zeros((len(months_vec),23,160,360))
 diaz3 = np.zeros((len(months_vec),23,160,360))
 diaz4 = np.zeros((len(months_vec),23,160,360))
-diaz5 = np.zeros((len(months_vec),23,160,360))
+diaz5 = np.zeros((len(months_vec),23,160,360)) #largest diazotroph --> Trichodesmium
 
 # Open dataset
 i = 0
@@ -75,6 +75,37 @@ diaz_std = deepcopy(diaz_int)
 diaz_std = np.std(diaz_std,axis=0)
 diaz_int = np.mean(diaz_int,axis=0)
 diaz_cv = diaz_std/diaz_int
+
+#%% Create a mean annual, depth integrated array for each diazotroph species
+diaz1_int = np.zeros((12,23,160,360))
+for i in range(len(dz_all)):
+    diaz1_int[:,i,:,:] = diaz1[:,i,:,:]*dz_all[i].values  
+diaz1_int = np.sum(diaz1_int,axis=1)
+diaz1_int = np.mean(diaz1_int,axis=0)
+
+diaz2_int = np.zeros((12,23,160,360))
+for i in range(len(dz_all)):
+    diaz2_int[:,i,:,:] = diaz2[:,i,:,:]*dz_all[i].values  
+diaz2_int = np.sum(diaz2_int,axis=1)
+diaz2_int = np.mean(diaz2_int,axis=0)
+
+diaz3_int = np.zeros((12,23,160,360))
+for i in range(len(dz_all)):
+    diaz3_int[:,i,:,:] = diaz3[:,i,:,:]*dz_all[i].values  
+diaz3_int = np.sum(diaz3_int,axis=1)
+diaz3_int = np.mean(diaz3_int,axis=0)
+
+diaz4_int = np.zeros((12,23,160,360))
+for i in range(len(dz_all)):
+    diaz4_int[:,i,:,:] = diaz4[:,i,:,:]*dz_all[i].values  
+diaz4_int = np.sum(diaz4_int,axis=1)
+diaz4_int = np.mean(diaz4_int,axis=0)
+
+diaz5_int = np.zeros((12,23,160,360))
+for i in range(len(dz_all)):
+    diaz5_int[:,i,:,:] = diaz5[:,i,:,:]*dz_all[i].values  
+diaz5_int = np.sum(diaz5_int,axis=1)
+diaz5_int = np.mean(diaz5_int,axis=0)
 
 #%%############################################################################
 ################### Tang and Cassar database ##################################
@@ -129,9 +160,6 @@ Ric_high = 1.0916e-05
 conversion_low = [tri_low, UCYN_low, UCYN_low, Ric_low]
 conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
-#%% Converted nifH to biomass values
-bm_Tri = nifH_Tri*tri_low
-
 #%%compile the nifH data of different species into 1 matrix
 var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
 nifH_matrix = np.zeros((len(nifH_Tri),len(var_list)+1))
@@ -155,9 +183,6 @@ lat_abs = lat_nifH[absence[0]]
 
 #%% Import lat, lon, and regions file to define ocean basins/regions
 # after Teng et al., 2014
-
-# PROBLEM 2: CREATE THE REGIONS FROM DARWIN --> SCRIPT make_mask.py
-# import regions file (and lat, lon of course too) from Darwin as soon as it's ready
 
 #regions = np.fromfile('mask_darwin.int64_360x160.bin', 'int64').reshape(160, 360)
 #reg_lon = np.mod(lon, 360.)
@@ -193,6 +218,17 @@ nifH_reg_UCYN_A = nifH_reg[nifH_UCYN_A>0]
 nifH_reg_UCYN_B = nifH_reg[nifH_UCYN_B>0]
 nifH_reg_Richelia = nifH_reg[nifH_Richelia>0]
 
+#%% Interpolate Darwin diazotroph simulation
+# HOW?
+# Goal: assign a region to each gridpoint in Darwin
+# and/or evaluate diazotrophs in each region
+I_d = si.RegularGridInterpolator((lat, lon), regions, 'nearest',
+                               bounds_error=False, fill_value=None)
+latlon = np.zeros((160, 320))
+latlon[:,0] = lat
+latlon[:,1] = np.mod(lon, 360.)
+
+diaz1_Croco = I_d(latlon).asype(int)
 
 #%%############################################################################
 ################### Analyses of nifH data #####################################
@@ -253,22 +289,24 @@ mpl.rcParams['legend.fontsize'] = 'medium'
 mpl.rcParams['figure.titlesize'] = 'medium'
 
 # chose species (0=Trichodesmium, 1=UCYN_A, 2=UCYN_B, 3=Richlia)
-species = 1
+species = 0
 species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
 specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
 #set axes limits
-#ymin = 0
-#ymax = max(nifH[mytypes_short[species]])
-#y2min = 0
-#y2max = max(nifH[mytypes_short[species]]*tri_high)
+ymin = 10e-06
+ymax = 10e6
+y2min = 10e-03
+y2max = 10e04
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 bxpstats = []
 ax.set_ylabel('nifH Gene (x106 copies m-2)')
 ax.set_title('nifH abundance and biomass: '+str(species_labels[species]))
+ax.set_yscale('log')
 #ax.set_ylim([ymin,ymax])
 ax2 = ax.twinx()
 ax2.set_ylabel('biomass (mmol C m-2)')
+ax2.set_yscale('log')
 #ax2.set_ylim([y2min,y2max])
 
 for i in regs:
@@ -283,18 +321,22 @@ for i in regs:
         ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True)
 
 #%% Show results for all species per region
+from matplotlib.patches import Patch
 
+# FILL BARS WITH DIFFERENT COLOR TO DISTINGUISH BETWEEN NIFH (LEFT) AND BIOMASS (RIGHT) BARS
 # chose regions (0-12)
-reg_num = 0
+reg_num = 9
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 bxpstats = []
 ax.set_ylabel('nifH Gene (x106 copies m-2)')
 ax.set_title('nifH abundance and biomass: region '+str(reg_num))
-#ax.set_ylim([ymin,ymax])
+ax.set_yscale('log')
+ax.set_ylim([ymin,ymax])
 ax2 = ax.twinx()
 ax2.set_ylabel('biomass (mmol C m-2)')
-#ax2.set_ylim([y2min,y2max])
+ax2.set_yscale('log')
+ax2.set_ylim([y2min,y2max])
 
 for i in range(0,len(mytypes_short)):
     if np.sum(nifH[mytypes_short[i]][nifH_reg==reg_num]) > 0:
@@ -304,8 +346,8 @@ for i in range(0,len(mytypes_short)):
         bm_stats = statsfun(bm,str(specs_labels[i]))
 #        nif_stats = statsfun(nif,'nifH'+str(regs[i]))
 #        bm_stats = statsfun(bm,'bm'+str(regs[i]))
-        ax.bxp([nif_stats], positions=[i-0.25], showmeans=True, showfliers=False, meanline=True)
-        ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True)
+        ax.bxp([nif_stats], positions=[i-0.25], showmeans=True, showfliers=False, meanline=True, patch_artist=True)
+        ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True, patch_artist=True)
 
 #%% show all
 
