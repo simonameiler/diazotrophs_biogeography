@@ -184,10 +184,6 @@ lat_abs = lat_nifH[absence[0]]
 #%% Import lat, lon, and regions file to define ocean basins/regions
 # after Teng et al., 2014
 
-#regions = np.fromfile('mask_darwin.int64_360x160.bin', 'int64').reshape(160, 360)
-#reg_lon = np.mod(lon, 360.)
-#reg_lat = lat
-
 regions = pd.read_csv('/Users/meilers/MITinternship/Data/Regions/regions.csv', header=None).values
 reg_lon = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lons.csv', delimiter=',').astype(int)
 reg_lat = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lats.csv', delimiter=',').astype(int)
@@ -219,16 +215,34 @@ nifH_reg_UCYN_B = nifH_reg[nifH_UCYN_B>0]
 nifH_reg_Richelia = nifH_reg[nifH_Richelia>0]
 
 #%% Interpolate Darwin diazotroph simulation
-# HOW?
-# Goal: assign a region to each gridpoint in Darwin
-# and/or evaluate diazotrophs in each region
-I_d = si.RegularGridInterpolator((lat, lon), regions, 'nearest',
-                               bounds_error=False, fill_value=None)
-latlon = np.zeros((160, 320))
-latlon[:,0] = lat
-latlon[:,1] = np.mod(lon, 360.)
 
-diaz1_Croco = I_d(latlon).asype(int)
+lm = grid.HFacC[0].values == 0
+
+reg_lat_d = np.arange(-89., 90., 2.)
+reg_lon_d = np.arange(-181., 178., 2.)
+
+# extend for periodicity in lon
+reg_lon_extended = np.r_[reg_lon_d-360, reg_lon_d, reg_lon_d+360]
+regions_extended = np.c_[regions, regions, regions]
+
+# make 2d
+yr, xr = np.meshgrid(reg_lat_d, reg_lon_extended, indexing='ij')
+
+# do not use land values
+w = regions_extended != 0
+
+# make target coordinates 2d
+xo, yo = np.meshgrid(lat, (lon+182)%360-182, indexing='ij')
+
+# map
+reg_darwin = si.griddata((yr[w],xr[w]), regions_extended[w], (xo.ravel(), yo.ravel()), 'nearest')
+reg_darwin = reg_darwin.reshape(160, 360)
+reg_darwin[lm] = 0
+
+fig,ax = plt.subplots(figsize=(9,6))
+c = ax.imshow(reg_darwin, interpolation='none')
+cbar = plt.colorbar(c,ax=ax)
+plt.show()
 
 #%%############################################################################
 ################### Analyses of nifH data #####################################
@@ -321,7 +335,6 @@ for i in regs:
         ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True)
 
 #%% Show results for all species per region
-from matplotlib.patches import Patch
 
 # FILL BARS WITH DIFFERENT COLOR TO DISTINGUISH BETWEEN NIFH (LEFT) AND BIOMASS (RIGHT) BARS
 # chose regions (0-12)
@@ -467,8 +480,8 @@ medianprops = dict(linestyle='-.', linewidth=0, color='k')
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
-ax.set_ylabel('nifH Gene (x106 copies m-2)')
-ax.set_title('nifH abundance')
+ax.set_ylabel('biomass (mmol C m-2)')
+ax.set_title('biomass from nifH abundance and Darwin')
 ax.set_yscale('log')
 ax.set_ylim([ymin,ymax])
 ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
@@ -488,18 +501,65 @@ for i in regs:
         bm_B = np.append(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2],np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])
         bm_Ric = np.append(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3],np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
         #bm_tot = np.append(np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0],np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])
+        #bm_darwin = diaz_int[reg_darwin==i]
         bm_Tri_stats = statsfun3(bm_Tri,'')
         bm_A_stats = statsfun3(bm_A,'')
         bm_B_stats = statsfun3(bm_B,str(regs[i]))
         bm_Ric_stats = statsfun3(bm_Ric,'')
         #bm_tot_stats = statsfun2(bm_tot,'')
+        #bm_darwin_stats = statsfun3(bm_darwin,'D')
 
         ax.bxp([bm_Tri_stats], positions=[i-0.6], showfliers=False, meanline=False, medianprops=medianprops)
         ax.bxp([bm_A_stats], positions=[i-0.45], showfliers=False, meanline=False, medianprops=medianprops)
         ax.bxp([bm_B_stats], positions=[i-0.3],  showfliers=False, meanline=True, medianprops=medianprops)
         ax.bxp([bm_Ric_stats], positions=[i-0.15], showfliers=False, meanline=True, medianprops=medianprops)
         #ax.bxp([bm_tot_stats], positions=[i], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
+        #ax.bxp([bm_darwin_stats], positions=[i], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
+        #ax.bxp([bm_darwin_stats], positions=[i], showfliers=False, meanline=True, medianprops=medianprops)
 
+# SM Note on results: I don't think it makes much sense to compare the mean biomass from Darwin to the biomass from nifH abundance for the 
+        # different species here. Maybe first calculate a aggregate biomass estimate from nifH and then compare it to Darwin?
+        # Still, these results might be biased towards the few observations...
+
+#%% Calculate mean biomass from nifH abundance over all species 
+        # CAREFUL: THERE'S STILL AN ERROR IN ROW 553,554 WHEN SUMMING UP THE CONTRIBUTIONS OF THE DIFFERENT SPECIES (NANs)
+
+def statsfun4(x, label):
+    stats = {
+        'med': x.mean(),
+        'q1': x.mean(),
+        'q3': x.mean(),
+        'whislo': x.mean(),
+        'whishi': x.mean(),
+        'mean': x.mean(),
+        'label': label,
+        }
+    return stats
+
+ymin = 1e-03
+
+fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
+bxpstats = []
+ax.set_ylabel('biomass (mmol C m-2)')
+ax.set_title('biomass from nifH abundance and Darwin')
+ax.set_yscale('log')
+ax.set_ylim([ymin,ymax])
+ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+               alpha=0.5)
+ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
+               alpha=0.5)
+for i in regs:
+    if np.sum(nifH_reg==i) > 0:
+        mean_bm_low = (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3])
+        mean_bm_high =  (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
+        mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
+        bm_darwin = diaz_int[reg_darwin==i]
+        mean_bm_stats = statsfun3(mean_bm_mean,str(regs[i]))
+        bm_darwin_stats = statsfun4(bm_darwin,'D')
+        ax.bxp([mean_bm_stats], positions=[i-0.1], showmeans=True, meanprops=meanprops, medianprops=medianprops, showfliers=False, meanline=False)
+        ax.bxp([bm_darwin_stats], positions=[i+0.1], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
+
+mean_bm_low = np.nansum((np.mean(nifH[mytypes_short[0]][nifH_reg==6])*conversion_low[0]),(np.mean(nifH[mytypes_short[1]][nifH_reg==6])*conversion_low[1]),(np.mean(nifH[mytypes_short[2]][nifH_reg==6])*conversion_low[2]),(np.mean(nifH[mytypes_short[3]][nifH_reg==6])*conversion_low[3]))
 #%% Presence/absence on monthly time scales
 # find a way to display the data on monthly scales
 pres_month = nifH_matrix[presence,3]
@@ -538,7 +598,7 @@ mask_out = np.where((diaz_int < 1e-04), 1, 0)
 
 
 #SM: What are the correct values for lat, lon here?
-I_in = si.RegularGridInterpolator((reg_lat, reg_lon), mask, 'nearest',
+I_in = si.RegularGridInterpolator((lat, lon), mask, 'nearest',
                                bounds_error=False, fill_value=None)
 
 mask_darwin_nifH = I_in(latlon).astype(int)
