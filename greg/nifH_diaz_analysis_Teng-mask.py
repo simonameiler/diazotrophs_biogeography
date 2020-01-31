@@ -22,7 +22,7 @@ import scipy.interpolate as si
 ###############################################################################
 
 #OJ: can read all grid info from this file
-grid = xr.open_dataset('/Users/meilers/MITinternship/Data/grid.nc')
+grid = xr.open_dataset('d:/dropbox/working/diazotrophs/diazotrophs_biogeography/data/grid.nc')
 
 lon = grid.X   #needed for plotting
 lat = grid.Y    #needed for plotting
@@ -47,7 +47,7 @@ diaz5 = np.zeros((len(months_vec),23,160,360)) #largest diazotroph --> Trichodes
 # Open dataset
 i = 0
 for month in months_vec:
-    diaz = xr.open_dataset('/Users/meilers/MITinternship/Data/run19_33_MONTH/3d.00000'+str(mon_list[month])+'.nc')
+    diaz = xr.open_dataset('D:/Dropbox/Working/DIAZOTROPHS/data/monthly/3d.00000'+str(mon_list[month])+'.nc')
     diaz1[month,:,:,:] = diaz.TRAC30.values[:,:,:,:]
     diaz2[month,:,:,:] = diaz.TRAC31.values[:,:,:,:]
     diaz3[month,:,:,:] = diaz.TRAC32.values[:,:,:,:]
@@ -111,7 +111,7 @@ diaz5_int = np.mean(diaz5_int,axis=0)
 ################### Tang and Cassar database ##################################
 ###############################################################################
 
-diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_mod.csv')
+diazotroph_observations = pd.read_csv('D:/Dropbox/Working/DIAZOTROPHS/diazotrophs_biogeography/Data/nifH_Gene_Integral_mod.csv')
 #print(diazotroph_observations)
 
 # Single columns of nifH database in list format
@@ -188,13 +188,13 @@ lat_abs = lat_nifH[absence[0]]
 #reg_lon = np.mod(lon, 360.)
 #reg_lat = lat
 
-regions = pd.read_csv('/Users/meilers/MITinternship/Data/Regions/regions.csv', header=None).values
-reg_lon = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lons.csv', delimiter=',').astype(int)
-reg_lat = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lats.csv', delimiter=',').astype(int)
+regions = pd.read_csv('D:/Dropbox/Working/DIAZOTROPHS/diazotrophs_biogeography/Data/Regions/regions.csv', header=None).values
+reg_lon = np.loadtxt('D:/Dropbox/Working/DIAZOTROPHS/diazotrophs_biogeography/Data/Regions/lons.csv', delimiter=',').astype(int)
+reg_lat = np.loadtxt('D:/Dropbox/Working/DIAZOTROPHS/diazotrophs_biogeography/Data/Regions/lats.csv', delimiter=',').astype(int)
 
 # Show mask 
 fig,ax = plt.subplots(figsize=(9,6))
-c = ax.imshow(regions, interpolation='none')
+c = ax.imshow(regions, interpolation='none',origin='lower')
 cbar = plt.colorbar(c,ax=ax)
 plt.show()
 
