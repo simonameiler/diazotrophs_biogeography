@@ -463,8 +463,8 @@ for i in regs:
         pos += 1
 
 means = [c['means'][0] for c in [c0,c1,c2,c3,c4]]
-ax.legend(means, 'Tri A B Ric tot'.split())
-fig.savefig('/Users/meilers/MITinternship/Plots/mean_nifH_abundance_species-specific.png', bbox_inches='tight', dpi=300)
+ax.legend(means, 'Tri A B Ric tot'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))
+#fig.savefig('/Users/meilers/MITinternship/Plots/mean_nifH_abundance_species-specific.png', bbox_inches='tight', dpi=300)
         
 #%% Now plot the deducted biomass
 def statsfun3(x, label):
@@ -542,8 +542,8 @@ for i in regs:
         ax.axvline(10.2, color='k', ls='dashed',linewidth=1)
         
 means = [c['means'][0] for c in [c0,c1,c2,c3]]
-ax.legend(means, 'Tri A B Ric'.split())        
-fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm-from-nifH_species-specific.png', bbox_inches='tight', dpi=300)
+ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))        
+#fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm-from-nifH_species-specific.png', bbox_inches='tight', dpi=300)
 
 # SM Note on results: I don't think it makes much sense to compare the mean biomass from Darwin to the biomass from nifH abundance for the 
         # different species here. Maybe first calculate a aggregate biomass estimate from nifH and then compare it to Darwin?
