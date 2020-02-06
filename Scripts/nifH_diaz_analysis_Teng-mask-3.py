@@ -148,6 +148,13 @@ mytypes_short = [
 nifH = diazotroph_observations[mytypes]
 nifH_sum = nifH.sum(1)
 
+#%% Just to try and see what happens if I chose the 4 species instead of all 7 species of the dataset
+# If I use this option to quantify the accuracy, I also have to adapt the var_list and exclude the 3 species there too
+# Additionally, I should make sure to get the presence, absence datapoints right. They would change too.
+
+#nifH = diazotroph_observations[mytypes_short]
+#nifH_sum = nifH.sum(1)
+
 #%% Conversion factors for nifH abundance to biomass
 
 tri_low = 1.2165e-05
@@ -162,6 +169,7 @@ conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
 #%%compile the nifH data of different species into 1 matrix
 var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
+#var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_Richelia]
 nifH_matrix = np.zeros((len(nifH_Tri),len(var_list)+1))
 for i in range(len(var_list)):
     nifH_matrix[:,i] = var_list[i]
@@ -248,7 +256,7 @@ plt.show()
 
 #%% 
 #fig,ax = plt.subplots(figsize=(9,6))
-#c = ax.imshow(reg_darwin==11, interpolation='none')
+#c = ax.imshow(regions==4, interpolation='none')
 #cbar = plt.colorbar(c,ax=ax)
 #plt.show()
 
@@ -271,135 +279,6 @@ def statsfun(x, label):
 # Make boxplots for the regions
 regs = np.arange(0,12,1)
 
-fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
-for i in regs:
-    if np.sum(nifH_reg==i) > 0:
-        x = nifH_sum[nifH_reg==i]
-        stats = {
-            'med': x.median(),
-            'q1': x.min(),
-            'q3': x.max(),
-            'whislo': x.min(),
-            'whishi': x.max(),
-            'mean': x.mean(),
-            'label': str(regs[i]),
-            }
-        ax.bxp([stats], positions=[i], showmeans=True, showfliers=False, meanline=True)
-
-fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
-bxpstats = []
-for i in regs:
-    if np.sum(nifH_reg==i) > 0:
-        x = nifH_sum[nifH_reg==i]
-        stats = {
-            'med': x.median(),
-            'q1': x.min(),
-            'q3': x.max(),
-            'whislo': x.min(),
-            'whishi': x.max(),
-            'mean': x.mean(),
-            'label': str(regs[i]),
-            }
-        bxpstats.append(stats)
-
-ax.bxp(bxpstats, showmeans=True, showfliers=False, meanline=True)
-
-#%% Show results for one species in all regions
-import matplotlib as mpl
-mpl.rcParams['font.size'] = 10
-mpl.rcParams['legend.fontsize'] = 'medium'
-mpl.rcParams['figure.titlesize'] = 'medium'
-
-# chose species (0=Trichodesmium, 1=UCYN_A, 2=UCYN_B, 3=Richlia)
-species = 0
-species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
-specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
-#set axes limits
-ymin = 10e-06
-ymax = 10e6
-y2min = 10e-03
-y2max = 10e04
-
-fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
-bxpstats = []
-ax.set_ylabel('nifH Gene (x106 copies m-2)')
-ax.set_title('nifH abundance and biomass: '+str(species_labels[species]))
-ax.set_yscale('log')
-#ax.set_ylim([ymin,ymax])
-ax2 = ax.twinx()
-ax2.set_ylabel('biomass (mmol C m-2)')
-ax2.set_yscale('log')
-#ax2.set_ylim([y2min,y2max])
-
-for i in regs:
-    if np.sum(nifH_reg==i) > 0:
-        nif = nifH[mytypes_short[species]][nifH_reg==i]
-        bm = (nifH[mytypes_short[species]][nifH_reg==i]*tri_low).append(nifH[mytypes_short[species]][nifH_reg==i]*tri_high)
-        nif_stats = statsfun(nif,str(regs[i]))
-        bm_stats = statsfun(bm,str(regs[i]))
-#        nif_stats = statsfun(nif,'nifH'+str(regs[i]))
-#        bm_stats = statsfun(bm,'bm'+str(regs[i]))
-        ax.bxp([nif_stats], positions=[i-0.25], showmeans=True, showfliers=False, meanline=True)
-        ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True)
-
-#%% Show results for all species per region
-
-# FILL BARS WITH DIFFERENT COLOR TO DISTINGUISH BETWEEN NIFH (LEFT) AND BIOMASS (RIGHT) BARS
-# chose regions (0-12)
-reg_num = 9
-
-fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
-bxpstats = []
-ax.set_ylabel('nifH Gene (x106 copies m-2)')
-ax.set_title('nifH abundance and biomass: region '+str(reg_num))
-ax.set_yscale('log')
-ax.set_ylim([ymin,ymax])
-ax2 = ax.twinx()
-ax2.set_ylabel('biomass (mmol C m-2)')
-ax2.set_yscale('log')
-ax2.set_ylim([y2min,y2max])
-
-for i in range(0,len(mytypes_short)):
-    if np.sum(nifH[mytypes_short[i]][nifH_reg==reg_num]) > 0:
-        nif = nifH[mytypes_short[i]][nifH_reg==reg_num]
-        bm = (nifH[mytypes_short[i]][nifH_reg==reg_num]*conversion_low[i]).append(nifH[mytypes_short[i]][nifH_reg==i]*conversion_high[i])
-        nif_stats = statsfun(nif,str(specs_labels[i]))
-        bm_stats = statsfun(bm,str(specs_labels[i]))
-#        nif_stats = statsfun(nif,'nifH'+str(regs[i]))
-#        bm_stats = statsfun(bm,'bm'+str(regs[i]))
-        ax.bxp([nif_stats], positions=[i-0.25], showmeans=True, showfliers=False, meanline=True, patch_artist=True)
-        ax2.bxp([bm_stats], positions=[i+0.25], showmeans=True, showfliers=False, meanline=True, patch_artist=True)
-
-#%% show all
-
-# FIX SECONDARY AXIS IN LOOP
-
-fig,ax = plt.subplots(nrows=4, ncols=1,figsize=(9, 9))
-bxpstats = []
-
-for i in range(0,len(mytypes_short)):
-    if np.sum(nifH[mytypes_short[i]][nifH_reg==reg_num]) > 0:
-        for j in regs:
-            if np.sum(nifH_reg==j) > 0:
-                nif = nifH[mytypes_short[i]][nifH_reg==j]
-                bm = (nifH[mytypes_short[i]][nifH_reg==j]*tri_low).append(nifH[mytypes_short[i]][nifH_reg==j]*tri_high)
-                nif_stats = statsfun(nif,str(regs[j]))
-                bm_stats = statsfun(bm,str(regs[j]))
-#                nif_stats = statsfun(nif,'nifH'+str(regs[i]))
-#                bm_stats = statsfun(bm,'bm'+str(regs[i]))
-                ax[i].bxp([nif_stats], positions=[j-0.25], showmeans=True, showfliers=False, meanline=True)
-                ax2 = ax[i].twinx()
-                ax2.bxp([bm_stats], positions=[j+0.25], showmeans=True, showfliers=False, meanline=True)
-               
-
-
-#%% New approach. We'll show nifH and biomass deducted from nifH in separate plots (no secundary axis)
-# Other changes:
-# i) Show only species-specific means per region, not whole distribution of values
-# ii) Convert means with high and low conversion factor to possible "mean biomass range"
-# iii) Calculate total biomass from nifH independent from species (find weighted aggregate)
-# iv) incorporated biomass from Darwin per regions - show mean...and maybe range??
-
 def statsfun2(x, label):
     stats = {
         'med': x.median(),
@@ -416,6 +295,7 @@ def statsfun2(x, label):
 species = 0
 species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
 specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
+region_labels = np.arange(1,13,1)
 #set axes limits
 ymin = 1e-01
 ymax = 1e05
@@ -449,7 +329,7 @@ for i in regs:
         nif_tot = nifH_sum[nifH_reg==i]
         nif_Tri_stats = statsfun2(nif_Tri,'')
         nif_A_stats = statsfun2(nif_A,'')
-        nif_B_stats = statsfun2(nif_B,str(regs[i]))
+        nif_B_stats = statsfun2(nif_B,str(region_labels[i]))
         nif_Ric_stats = statsfun2(nif_Ric,'')
         nif_tot_stats = statsfun2(nif_tot,'')
 
@@ -488,10 +368,7 @@ ymin = 1e-07
 ymax = 1e03
 
 medianprops = dict(linestyle='-.', linewidth=0, color='k')
-#meanprops = dict(marker='D', linewidth=0, markeredgecolor='black',
-#                      markerfacecolor='firebrick')
-#meanprops_tot = dict(marker='D', markeredgecolor='black',
-#                      markerfacecolor='green')
+
 boxprops_Tri = dict(edgecolor='black', facecolor='#621055')
 boxprops_A   = dict(edgecolor='black', facecolor='#b52b65')
 boxprops_B   = dict(edgecolor='black', facecolor='#ed6663')
@@ -509,11 +386,6 @@ ax.set_ylim([ymin,ymax])
 #ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 ax.yaxis.grid(True, linestyle='-', which='major', color='grey',alpha=0.5)
 
-#bm_Tri = (nifH[mytypes_short[0]][nifH_reg==i]*conversion_low[0]).append(nifH[mytypes_short[0]][nifH_reg==i]*conversion_high[0])
-#bm_Tri = (nifH[mytypes_short[0]][nifH_reg==i].mean*conversion_low[0]).append(nifH[mytypes_short[0]][nifH_reg==i].mean*conversion_high[0])
-
-#bmmm = np.append(np.mean(nifH[mytypes_short[0]][nifH_reg==8])*conversion_low[0],np.mean(nifH[mytypes_short[0]][nifH_reg==8])*conversion_high[0])
-
 pos = 0
 for i in regs:
     if np.sum(nifH_reg==i) > 0:
@@ -521,22 +393,16 @@ for i in regs:
         bm_A = np.append(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1],np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])
         bm_B = np.append(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2],np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])
         bm_Ric = np.append(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3],np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
-        #bm_tot = np.append(np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0],np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])
-        #bm_darwin = diaz_int[reg_darwin==i]
         bm_Tri_stats = statsfun3(bm_Tri,'')
         bm_A_stats = statsfun3(bm_A,'')
-        bm_B_stats = statsfun3(bm_B,str(regs[i]))
+        bm_B_stats = statsfun3(bm_B,str(region_labels[i]))
         bm_Ric_stats = statsfun3(bm_Ric,'')
-        #bm_tot_stats = statsfun2(bm_tot,'')
-        #bm_darwin_stats = statsfun3(bm_darwin,'D')
 
         ax.bxp([bm_Tri_stats], positions=[i-0.6], boxprops=boxprops_Tri, **bxpkw)
         ax.bxp([bm_A_stats], positions=[i-0.45], boxprops=boxprops_A, **bxpkw)
         ax.bxp([bm_B_stats], positions=[i-0.3],  boxprops=boxprops_B, **bxpkw)
         ax.bxp([bm_Ric_stats], positions=[i-0.15], boxprops=boxprops_Ric, **bxpkw)
-        #ax.bxp([bm_tot_stats], positions=[i], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
-        #ax.bxp([bm_darwin_stats], positions=[i], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
-        #ax.bxp([bm_darwin_stats], positions=[i], showfliers=False, meanline=True, medianprops=medianprops)
+
         ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
         pos += 1
         ax.axvline(10.2, color='k', ls='dashed',linewidth=1)
@@ -564,9 +430,23 @@ def statsfun4(x, label):
         }
     return stats
 
+# maybe use this or a similar approach to display std around the mean of darwin biomass for each region
+def statsfun5(x, label):
+    stats = {
+        'med': x.mean(),
+        'q1': x.std(),
+        'q3': x.std(),
+        'whislo': x.mean(),
+        'whishi': x.mean(),
+        'mean': x.mean(),
+        'label': label,
+        }
+    return stats
+
 meanprops_tot_d = dict(marker='o', markeredgecolor='black', markerfacecolor='blue')
 
 ymin = 1e-03
+ymax = 1e03
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
@@ -580,11 +460,13 @@ ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
                alpha=0.5)
 for i in regs:
     if np.sum(nifH_reg==i) > 0:
-        mean_bm_low = (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3])
-        mean_bm_high =  (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
+        #mean_bm_low = (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3])
+        #mean_bm_high =  (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
+        mean_bm_low = pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_low[j] for j in range(4)]).mean()
+        mean_bm_high =  pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_high[j] for j in range(4)]).mean()
         mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
         bm_darwin = diaz_int[reg_darwin==i]
-        mean_bm_stats = statsfun3(mean_bm_mean,str(regs[i]))
+        mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
         bm_darwin_stats = statsfun4(bm_darwin,'D')
         ax.bxp([mean_bm_stats], positions=[i-0.1], showmeans=False, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
         ax.bxp([bm_darwin_stats], positions=[i+0.1], showmeans=True, meanprops=meanprops_tot_d, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
@@ -604,8 +486,7 @@ UCYN_C_list = np.where(nifH_UCYN_C > 0)
 Richelia_list = np.where(nifH_Richelia > 0)
 Calothrix_list = np.where(nifH_Calothrix > 0)
 Gamma_list = np.where(nifH_Gamma > 0)
-#lon_nifH[Tri_list[0]]
-#lat_nifH[Tri_list[0]]
+
 
 #%% Absence of nifH (zeros or n.d.)
 
