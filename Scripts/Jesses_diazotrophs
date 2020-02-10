@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 10 16:58:10 2020
+
+@author: meilers
+"""
+
+import xarray as xr
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import cmocean as cm
+import matplotlib.cm as cmo
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+from copy import deepcopy
+import scipy.interpolate as si
+
+dz_GA03 = pd.read_csv(r'/Users/meilers/MITinternship/Data/Jesse_McNichol/200129_GA03_1stRound_amplicons_all-16S-seqs.with-tax-high-depth-kept-mocks-blanks-removed.tsv',sep='\t')
+dz_GP13 = pd.read_csv(r'/Users/meilers/MITinternship/Data/Jesse_McNichol/200129_GP13_1stRound_amplicons_all-16S-seqs.with-tax-high-depth-kept-mocks-blanks-removed.tsv',sep='\t')
+
+
+dz_GA03_t = dz_GA03.transpose()
