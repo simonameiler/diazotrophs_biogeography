@@ -70,6 +70,8 @@ for i in range(len(dz_all)):
     #print(i)
 diaz_int = np.sum(diaz_int,axis=1)
 
+diaz_mon = deepcopy(diaz_int)
+
 # define std, mean and cv (to plot later)
 diaz_std = deepcopy(diaz_int)
 diaz_std = np.std(diaz_std,axis=0)
@@ -106,6 +108,16 @@ for i in range(len(dz_all)):
     diaz5_int[:,i,:,:] = diaz5[:,i,:,:]*dz_all[i].values  
 diaz5_int = np.sum(diaz5_int,axis=1)
 diaz5_int = np.mean(diaz5_int,axis=0)
+
+
+#%% Make seasonal P:N and Fe:N arrays
+
+season = ['DJF','MAM','JJA','SON']
+
+diaz_DJF = (diaz_mon[0,:,:]+diaz_mon[1,:,:]+diaz_mon[11,:,:])/3
+diaz_MAM = np.mean(diaz_mon[2:4,:,:],axis=0)
+diaz_JJA = np.mean(diaz_mon[5:7,:,:],axis=0)
+diaz_SON = np.mean(diaz_mon[8:10,:,:],axis=0)
 
 #%%############################################################################
 ################### Tang and Cassar database ##################################
@@ -298,7 +310,7 @@ plt.show()
 #%% 
 #fig,ax = plt.subplots(figsize=(9,6))
 #c = ax.imshow(reg_darwin==12, interpolation='none')
-#cbar = plt.colorbar(c,ax=ax)
+##cbar = plt.colorbar(c,ax=ax)
 #plt.show()
 
 #%%############################################################################
@@ -336,7 +348,8 @@ def statsfun2(x, label):
 species = 0
 species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
 specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
-region_labels = np.arange(0,12,1)
+#region_labels = np.arange(0,13,1)
+region_labels = ['','NAtl', 'NAtlGyre', 'EqAtl', 'SAtlGyre', 'SO', 'SInd', 'NInd', 'SPacGyre', 'EqPac', 'NPacGyre', 'NPac', 'Arctic']
 #set axes limits
 ymin = 1e-01
 ymax = 1.3e05
@@ -351,10 +364,11 @@ meanprops_tot = dict(marker='D', markeredgecolor='black', markerfacecolor='green
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
-ax.set_ylabel('nifH Gene (x106 copies m-2)')
+ax.set_ylabel('nifH Gene (x10$^{6}$ copies m$^{-2}$)')
 ax.set_title('mean nifH abundance')
 ax.set_yscale('log')
 ax.set_ylim([ymin,ymax])
+ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
 #ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
 #               alpha=0.5)
 ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
@@ -381,6 +395,7 @@ for i in regs:
         c4 = ax.bxp([nif_tot_stats], positions=[pos], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
 
         ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
+        ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
 
 means = [c['means'][0] for c in [c0,c1,c2,c3,c4]]
@@ -422,9 +437,10 @@ bxpkw = dict(showfliers=False, showmeans=False, medianprops=medianprops, patch_a
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
 ax.set_ylabel('biomass (mmol C m-2)')
-ax.set_title('biomass from nifH abundance')
+ax.set_title('potential biomass range from mean nifH abundance')
 ax.set_yscale('log')
 ax.set_ylim([ymin,ymax])
+ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
 #ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 ax.yaxis.grid(True, linestyle='-', which='major', color='grey',alpha=0.5)
 
@@ -443,17 +459,17 @@ for i in regs:
         bm_B_stats = statsfun3(bm_B,str(region_labels[i]))
         bm_Ric_stats = statsfun3(bm_Ric,'')
 
-        ax.bxp([bm_Tri_stats], positions=[i-0.6], boxprops=boxprops_Tri, **bxpkw)
-        ax.bxp([bm_A_stats], positions=[i-0.45], boxprops=boxprops_A, **bxpkw)
-        ax.bxp([bm_B_stats], positions=[i-0.3],  boxprops=boxprops_B, **bxpkw)
-        ax.bxp([bm_Ric_stats], positions=[i-0.15], boxprops=boxprops_Ric, **bxpkw)
+        ax.bxp([bm_Tri_stats], positions=[pos-0.6], boxprops=boxprops_Tri, **bxpkw)
+        ax.bxp([bm_A_stats], positions=[pos-0.45], boxprops=boxprops_A, **bxpkw)
+        ax.bxp([bm_B_stats], positions=[pos-0.3],  boxprops=boxprops_B, **bxpkw)
+        ax.bxp([bm_Ric_stats], positions=[pos-0.15], boxprops=boxprops_Ric, **bxpkw)
 
         #ax.text(i*0.1,0.9,''+(str(obs_count[i])+''))
 
         ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
+        ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
-        ax.axvline(10.2, color='k', ls='dashed',linewidth=1)
-        
+
 means = [c['means'][0] for c in [c0,c1,c2,c3]]
 ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))        
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm-from-nifH_species-specific.png', bbox_inches='tight', dpi=300)
@@ -464,58 +480,58 @@ ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12,
 
 #%% Calculate mean biomass from nifH abundance over all species 
 
-def statsfun4(x, label):
-    stats = {
-        'med': x.mean(),
-        'q1': x.mean(),
-        'q3': x.mean(),
-        'whislo': x.mean(),
-        'whishi': x.mean(),
-        'mean': x.mean(),
-        'label': label,
-        }
-    return stats
-
-# maybe use this or a similar approach to display std around the mean of darwin biomass for each region
-def statsfun5(x, label):
-    stats = {
-        'med': x.mean(),
-        'q1': x.std(),
-        'q3': x.std(),
-        'whislo': x.mean(),
-        'whishi': x.mean(),
-        'mean': x.mean(),
-        'label': label,
-        }
-    return stats
-
-meanprops_tot_d = dict(marker='o', markeredgecolor='black', markerfacecolor='blue')
-
-ymin = 1e-03
-ymax = 1e03
-
-fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
-bxpstats = []
-ax.set_ylabel('biomass (mmol C m-2)')
-ax.set_title('biomass from nifH abundance and Darwin')
-ax.set_yscale('log')
-ax.set_ylim([ymin,ymax])
-ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
-               alpha=0.5)
-ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
-               alpha=0.5)
-for i in regs:
-    if np.sum(nifH_reg==i) > 0:
-        #mean_bm_low = (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3])
-        #mean_bm_high =  (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
-        mean_bm_low = pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_low[j] for j in range(4)]).mean()
-        mean_bm_high =  pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_high[j] for j in range(4)]).mean()
-        mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
-        bm_darwin = diaz_int[reg_darwin==i]
-        mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
-        bm_darwin_stats = statsfun4(bm_darwin,'D')
-        ax.bxp([mean_bm_stats], positions=[i-0.1], showmeans=False, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
-        ax.bxp([bm_darwin_stats], positions=[i+0.1], showmeans=True, meanprops=meanprops_tot_d, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
+#def statsfun4(x, label):
+#    stats = {
+#        'med': x.mean(),
+#        'q1': x.mean(),
+#        'q3': x.mean(),
+#        'whislo': x.mean(),
+#        'whishi': x.mean(),
+#        'mean': x.mean(),
+#        'label': label,
+#        }
+#    return stats
+#
+## maybe use this or a similar approach to display std around the mean of darwin biomass for each region
+#def statsfun5(x, label):
+#    stats = {
+#        'med': x.mean(),
+#        'q1': x.std(),
+#        'q3': x.std(),
+#        'whislo': x.mean(),
+#        'whishi': x.mean(),
+#        'mean': x.mean(),
+#        'label': label,
+#        }
+#    return stats
+#
+#meanprops_tot_d = dict(marker='o', markeredgecolor='black', markerfacecolor='blue')
+#
+#ymin = 1e-03
+#ymax = 1e03
+#
+#fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
+#bxpstats = []
+#ax.set_ylabel('biomass (mmol C m-2)')
+#ax.set_title('biomass from nifH abundance and Darwin')
+#ax.set_yscale('log')
+#ax.set_ylim([ymin,ymax])
+#ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+#               alpha=0.5)
+#ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
+#               alpha=0.5)
+#for i in regs:
+#    if np.sum(nifH_reg==i) > 0:
+#        #mean_bm_low = (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3])
+#        #mean_bm_high =  (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
+#        mean_bm_low = pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_low[j] for j in range(4)]).mean()
+#        mean_bm_high =  pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_high[j] for j in range(4)]).mean()
+#        mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
+#        bm_darwin = diaz_int[reg_darwin==i]
+#        mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
+#        bm_darwin_stats = statsfun4(bm_darwin,'D')
+#        ax.bxp([mean_bm_stats], positions=[i-0.1], showmeans=False, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
+#        ax.bxp([bm_darwin_stats], positions=[i+0.1], showmeans=True, meanprops=meanprops_tot_d, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
 
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm_darwin.png', bbox_inches='tight', dpi=300)
         
@@ -539,10 +555,13 @@ ax.set_ylabel('biomass (mmol C m-2)')
 ax.set_title('biomass from nifH abundance and Darwin')
 ax.set_yscale('log')
 ax.set_ylim([ymin,ymax])
-ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
-               alpha=0.5)
+#ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+#               alpha=0.5)
 ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
                alpha=0.5)
+ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
+
+pos = 0
 for i in regs:
     if np.sum(nifH_reg==i) > 0:
         mean_bm_low = bm_nifH_low_tot[nifH_reg==i]
@@ -550,14 +569,18 @@ for i in regs:
         mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
         mean_bm_darwin = bm_darwin[nifH_reg==i]
         mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
-        bm_darwin_stats = statsfun3(mean_bm_darwin,'D')
-        bm0 = ax.bxp([mean_bm_stats], positions=[i-0.1], boxprops=boxprops_tot, **bxpkw2)
-        bm1 = ax.bxp([bm_darwin_stats], positions=[i+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
+        bm_darwin_stats = statsfun3(mean_bm_darwin,'')
+        bm0 = ax.bxp([mean_bm_stats], positions=[pos-0.1], boxprops=boxprops_tot, **bxpkw2)
+        bm1 = ax.bxp([bm_darwin_stats], positions=[pos+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
+
+        ax.axvline(pos+0.5, color='k', ls='dashed',linewidth=1)
+        ax.annotate(str(np.sum(nifH_reg==i)), (pos+.2,2*1e03), va='baseline', ha='center', xycoords='data')
+        pos += 1
 
 means = [c['means'][0] for c in [bm0,bm1]]
 ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 0.5))
 
-#fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm_darwin.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/bm_darwin_nifH.png', bbox_inches='tight', dpi=300)
 
 
 #%% Presence/absence on monthly time scales
@@ -592,8 +615,8 @@ no_Gamma_list = np.where(nifH_Gamma == 0)
 ###############################################################################
 
 # mask where Darwin diazotroph biomass is simulated
-mask = np.where((diaz_int > 1e-04), 1, 0)
-mask_out = np.where((diaz_int < 1e-04), 1, 0)
+mask = np.where((diaz_int > 1e-05), 1, 0)
+mask_out = np.where((diaz_int < 1e-05), 1, 0)
 
 
 #SM: What are the correct values for lat, lon here?
@@ -655,8 +678,8 @@ ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=col,extend='max')
-ax.plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='any nifH present')#label='Trichodesmium')
-ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='all nifH absent')
+ax.plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
+ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='nifH below LOD')
 ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
@@ -669,6 +692,7 @@ plt.show()
 
 #col = plt.get_cmap('RdBu_r')
 col = cm.cm.haline
+from matplotlib.colors import LogNorm
 
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
@@ -680,14 +704,14 @@ ax.yaxis.set_major_formatter(lat_formatter)
 ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-c0 = ax.contourf(lon,lat,reg_darwin,levels=np.linspace(0,12,13),cmap=col,extend='max')
-ax.plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='any nifH present')#label='Trichodesmium')
-ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='all nifH absent')
-ax.legend(loc='best')
+c0 = ax.contourf(lon,lat,reg_darwin,levels=np.linspace(0,12,13),cmap=cm.cm.gray,extend='max',alpha=0.7)
+c1 = ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum,norm=plt.Normalize(0,10000),cmap=col)
+#c1 = ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum,norm=LogNorm(),cmap=col)
+#ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
-cbar = fig.colorbar(c0, cax=cbar_ax)
-cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+cbar = fig.colorbar(c1, cax=cbar_ax)
+cbar.set_label('nifH gene abundance (x10$^{6}$ copies m$^{-2}$)',rotation=90, position=(0.5,0.5))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_nifH_regions.png', bbox_inches='tight', dpi=300)
 
@@ -708,36 +732,16 @@ ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 c0 = ax.contourf(lon,lat,mask,cmap=col,extend='max')
-ax.plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='any nifH present')#label='Trichodesmium')
-ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='all nifH absent')
+ax.plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
+ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='nifH below LOD')
 ax.legend(loc='best')
-fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
-cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
-cbar = fig.colorbar(c0, cax=cbar_ax)
-cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+#fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+#cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
+#cbar = fig.colorbar(c0, cax=cbar_ax)
+#cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out.png', bbox_inches='tight', dpi=300)
 
-#%%
-
-#col = plt.get_cmap('RdBu_r')
-col = cm.cm.haline
-
-fig,ax = plt.subplots(figsize=(9,4))
-
-#ax.set_xticks([0,60,120,180,240,300,360])
-#ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80])
-#ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-c0 = ax.contourf(lon,lat,reg_darwin,levels=np.linspace(0,12,13),cmap=col,extend='max')
-ax.plot(latlon[:,1][presence[0]],latlon[:,0][presence[0]],'.',color='orange',label='any nifH present')#label='Trichodesmium')
-ax.plot(latlon[:,1][absence[0]],latlon[:,0][absence[0]],'x',color='m',label='all nifH absent')
-ax.legend(loc='upper left')
-fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
-cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
-cbar = fig.colorbar(c0, cax=cbar_ax)
-cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
-plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_regions_noproj.png', bbox_inches='tight', dpi=300)
 
 #%% 
 
@@ -755,9 +759,9 @@ ax.yaxis.set_major_formatter(lat_formatter)
 ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
 ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-#c0 = ax.contourf(lon,lat,reg_darwin,levels=np.linspace(0,12,13),cmap=col,extend='max')
+c0 = ax.contourf(lon,lat,diaz_int,levels=np.linspace(0,40,21),cmap=cm.cm.gray_r,extend='max',alpha=1)
 #ax.plot(lon_nifH[nifH_sum],lat_nifH[nifH_sum],'.',color='orange',label='any nifH present')#label='Trichodesmium')
-ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum[1])#label='Trichodesmium')
+ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum,norm=plt.Normalize(0,40),cmap=col)#label='Trichodesmium')
 #ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='all nifH absent')
 #ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)

@@ -296,10 +296,10 @@ plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/reg_map_Darwin.png', bbox_inches='tight', dpi=100)
 
 #%% 
-#fig,ax = plt.subplots(figsize=(9,6))
-#c = ax.imshow(reg_darwin==12, interpolation='none')
+fig,ax = plt.subplots(figsize=(9,6))
+c = ax.imshow(reg_darwin==12, interpolation='none')
 #cbar = plt.colorbar(c,ax=ax)
-#plt.show()
+plt.show()
 
 #%%############################################################################
 ################### Analyses of nifH data #####################################
@@ -336,7 +336,7 @@ def statsfun2(x, label):
 species = 0
 species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
 specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
-region_labels = np.arange(0,12,1)
+region_labels = np.arange(0,13,1)
 #set axes limits
 ymin = 1e-01
 ymax = 1.3e05
@@ -443,17 +443,17 @@ for i in regs:
         bm_B_stats = statsfun3(bm_B,str(region_labels[i]))
         bm_Ric_stats = statsfun3(bm_Ric,'')
 
-        ax.bxp([bm_Tri_stats], positions=[i-0.6], boxprops=boxprops_Tri, **bxpkw)
-        ax.bxp([bm_A_stats], positions=[i-0.45], boxprops=boxprops_A, **bxpkw)
-        ax.bxp([bm_B_stats], positions=[i-0.3],  boxprops=boxprops_B, **bxpkw)
-        ax.bxp([bm_Ric_stats], positions=[i-0.15], boxprops=boxprops_Ric, **bxpkw)
+        ax.bxp([bm_Tri_stats], positions=[pos-0.6], boxprops=boxprops_Tri, **bxpkw)
+        ax.bxp([bm_A_stats], positions=[pos-0.45], boxprops=boxprops_A, **bxpkw)
+        ax.bxp([bm_B_stats], positions=[pos-0.3],  boxprops=boxprops_B, **bxpkw)
+        ax.bxp([bm_Ric_stats], positions=[pos-0.15], boxprops=boxprops_Ric, **bxpkw)
 
         #ax.text(i*0.1,0.9,''+(str(obs_count[i])+''))
 
         ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
+        ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
-        ax.axvline(10.2, color='k', ls='dashed',linewidth=1)
-        
+
 means = [c['means'][0] for c in [c0,c1,c2,c3]]
 ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))        
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm-from-nifH_species-specific.png', bbox_inches='tight', dpi=300)
@@ -757,7 +757,7 @@ ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 #c0 = ax.contourf(lon,lat,reg_darwin,levels=np.linspace(0,12,13),cmap=col,extend='max')
 #ax.plot(lon_nifH[nifH_sum],lat_nifH[nifH_sum],'.',color='orange',label='any nifH present')#label='Trichodesmium')
-ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum[1])#label='Trichodesmium')
+ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum[1],norm=plt.Normalize(0,40),cmap=col)#label='Trichodesmium')
 #ax.plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='all nifH absent')
 #ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
