@@ -170,6 +170,43 @@ Ric_high = 1.0916e-05
 conversion_low = [tri_low, UCYN_low, UCYN_low, Ric_low]
 conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
+#%% Analyse total biomass from nifH at every point of observation
+
+# Create empty array and fill with values of converted biomass for each species from nifH abundance
+shape = len(nifH),len(mytypes_short)
+bm_nifH_low = np.zeros(shape)        
+bm_nifH_high = np.zeros(shape)
+
+for i in range(0,len(mytypes_short)):
+    bm_nifH_low[:,i] = nifH[mytypes_short[i]]*conversion_low[i]
+bm_nifH_low_tot = np.nansum(bm_nifH_low,axis=1)
+
+for i in range(0,len(mytypes_short)):
+    bm_nifH_high[:,i] = nifH[mytypes_short[i]]*conversion_high[i]
+bm_nifH_high_tot = np.nansum(bm_nifH_high,axis=1)
+
+#%% Prepare interpolator - Regions from Darwin mask
+
+darwin_lon = np.mod(lon, 360.)
+darwin_lat = lat
+#regions = np.fromfile('mask_darwin.int64_360x160.bin', 'int64').reshape(160, 360)
+
+j, i = np.mgrid[:160, :360]
+
+#%% create interpolator
+Ii = si.RegularGridInterpolator((darwin_lat, darwin_lon), i, 'nearest',
+                                bounds_error=False, fill_value=None)
+Ij = si.RegularGridInterpolator((darwin_lat, darwin_lon), j, 'nearest',
+                                bounds_error=False, fill_value=None)
+n_d = len(lon_nifH)
+latlon = np.zeros((n_d, 2))
+latlon[:,0] = lat_nifH
+latlon[:,1] = np.mod(lon_nifH, 360.)
+
+# indices of darwin grid cells containing nifH observations
+i_nifH = Ii(latlon).astype(int)
+j_nifH = Ij(latlon).astype(int)
+
 #%%compile the nifH data of different species into 1 matrix
 #var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
 var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_Richelia]
@@ -281,7 +318,7 @@ def statsfun(x, label):
     return stats
 
 # Make boxplots for the regions
-regs = np.arange(0,12,1)
+regs = np.arange(1,13,1)
 
 def statsfun2(x, label):
     stats = {
@@ -299,7 +336,7 @@ def statsfun2(x, label):
 species = 0
 species_labels = ['Trichodesmium', 'UCYN_A', 'UCYN_B', 'Richelia']
 specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
-region_labels = np.arange(1,13,1)
+region_labels = np.arange(0,12,1)
 #set axes limits
 ymin = 1e-01
 ymax = 1.3e05
@@ -350,6 +387,7 @@ means = [c['means'][0] for c in [c0,c1,c2,c3,c4]]
 ax.legend(means, 'Tri A B Ric tot'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_nifH_abundance_species-specific.png', bbox_inches='tight', dpi=300)
         
+
 #%% Now plot the deducted biomass
 def statsfun3(x, label):
     stats = {
@@ -377,7 +415,7 @@ boxprops_Tri = dict(edgecolor='black', facecolor='#621055')
 boxprops_A   = dict(edgecolor='black', facecolor='#b52b65')
 boxprops_B   = dict(edgecolor='black', facecolor='#ed6663')
 boxprops_Ric = dict(edgecolor='black', facecolor='#ffa372')
-boxprops_tot = dict(edgecolor='black', facecolor='green')
+boxprops_tot = dict(edgecolor='black', facecolor='lightgreen')
 
 bxpkw = dict(showfliers=False, showmeans=False, medianprops=medianprops, patch_artist=True)
 
@@ -390,12 +428,12 @@ ax.set_ylim([ymin,ymax])
 #ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 ax.yaxis.grid(True, linestyle='-', which='major', color='grey',alpha=0.5)
 
-obs_count = np.zeros(len(regs))
-
+#obs_count = np.zeros(len(regs))
+#obs_count[0] = len(nifH_sum[nifH_reg==0])
 pos = 0
 for i in regs:
     if np.sum(nifH_reg==i) > 0:
-        obs_count[i] = len(nifH_sum[nifH_reg==i])
+        #obs_count[i] = len(nifH_sum[nifH_reg==i])
         bm_Tri = np.append(np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0],np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])
         bm_A = np.append(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1],np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])
         bm_B = np.append(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2],np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])
@@ -410,7 +448,7 @@ for i in regs:
         ax.bxp([bm_B_stats], positions=[i-0.3],  boxprops=boxprops_B, **bxpkw)
         ax.bxp([bm_Ric_stats], positions=[i-0.15], boxprops=boxprops_Ric, **bxpkw)
 
-        ax.text(i*0.1,0.9,''+(str(obs_count[i])+''))
+        #ax.text(i*0.1,0.9,''+(str(obs_count[i])+''))
 
         ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
         pos += 1
@@ -480,6 +518,48 @@ for i in regs:
         ax.bxp([bm_darwin_stats], positions=[i+0.1], showmeans=True, meanprops=meanprops_tot_d, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
 
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm_darwin.png', bbox_inches='tight', dpi=300)
+        
+
+#%% Analyse total biomass from nifH at every point of observation and compare to Darwin at this point
+
+bm_darwin = diaz_int[j_nifH,i_nifH]
+
+boxprops_darwin = dict(edgecolor='black', facecolor='lightblue')
+meanprops_bm = dict(marker='D', markeredgecolor='black', markerfacecolor='green')
+meanprops_dar = dict(marker='D', markeredgecolor='black', markerfacecolor='blue')
+bxpkw2 = dict(showfliers=False, showmeans=True, meanprops=meanprops_bm, medianprops=medianprops, patch_artist=True)
+bxpkw2dar = dict(showfliers=False, showmeans=True, meanprops=meanprops_dar, medianprops=medianprops, patch_artist=True)
+
+ymin = 1e-04
+ymax = 1e04
+
+fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
+bxpstats = []
+ax.set_ylabel('biomass (mmol C m-2)')
+ax.set_title('biomass from nifH abundance and Darwin')
+ax.set_yscale('log')
+ax.set_ylim([ymin,ymax])
+ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+               alpha=0.5)
+ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
+               alpha=0.5)
+for i in regs:
+    if np.sum(nifH_reg==i) > 0:
+        mean_bm_low = bm_nifH_low_tot[nifH_reg==i]
+        mean_bm_high =  bm_nifH_high_tot[nifH_reg==i]
+        mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
+        mean_bm_darwin = bm_darwin[nifH_reg==i]
+        mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
+        bm_darwin_stats = statsfun3(mean_bm_darwin,'D')
+        bm0 = ax.bxp([mean_bm_stats], positions=[i-0.1], boxprops=boxprops_tot, **bxpkw2)
+        bm1 = ax.bxp([bm_darwin_stats], positions=[i+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
+
+means = [c['means'][0] for c in [bm0,bm1]]
+ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 0.5))
+
+#fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm_darwin.png', bbox_inches='tight', dpi=300)
+
+
 #%% Presence/absence on monthly time scales
 # find a way to display the data on monthly scales
 pres_month = nifH_matrix[presence,3]
