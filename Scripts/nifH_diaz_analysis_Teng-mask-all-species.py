@@ -152,11 +152,11 @@ mytypes_short = [
 # If I use this option to quantify the accuracy, I also have to adapt the var_list and exclude the 3 species there too
 # Additionally, I should make sure to get the presence, absence datapoints right. They would change too.
 
-nifH = diazotroph_observations[mytypes_short]
+nifH = diazotroph_observations[mytypes]
 nifH_sum = nifH.sum(1)
 
 # count missing values in dataframe
-diazotroph_observations[mytypes_short].isnull().sum()
+diazotroph_observations[mytypes].isnull().sum()
 
 #%% Conversion factors for nifH abundance to biomass
 
@@ -171,15 +171,15 @@ conversion_low = [tri_low, UCYN_low, UCYN_low, Ric_low]
 conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
 #%%compile the nifH data of different species into 1 matrix
-#var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
-var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_Richelia]
+var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_UCYN_C, nifH_Richelia, nifH_Calothrix, nifH_Gamma]
+#var_list = [lon_nifH, lat_nifH, year, month, nifH_Tri, nifH_UCYN_A, nifH_UCYN_B, nifH_Richelia]
 nifH_matrix = np.zeros((len(nifH_Tri),len(var_list)+1))
 for i in range(len(var_list)):
     nifH_matrix[:,i] = var_list[i]
 
 # find datapoints where no nifH gene is found at all (loop over all species)
 for j in range(len(nifH_Tri)):
-    if np.nansum(nifH_matrix[j,4:7]) > 0:
+    if np.nansum(nifH_matrix[j,4:11]) > 0:
         nifH_matrix[j,-1] = 1
 
 # create list of indices of nifH presences and absences. Can be used for plotting or further data manipulation
