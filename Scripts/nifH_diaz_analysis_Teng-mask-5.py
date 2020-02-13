@@ -110,7 +110,7 @@ diaz5_int = np.sum(diaz5_int,axis=1)
 diaz5_int = np.mean(diaz5_int,axis=0)
 
 
-#%% Make seasonal P:N and Fe:N arrays
+#%% Make seasonal diazotroph biomass arrays
 
 season = ['DJF','MAM','JJA','SON']
 
@@ -590,24 +590,24 @@ abs_month = nifH_matrix[absence,3]
 
 #%% Manipulating the nifH data to bring it into mappable form - SPECIES SPECIFIC
 
-Tri_list = np.where(nifH_Tri > 0)
-UCYN_A_list = np.where(nifH_UCYN_A > 0) 
-UCYN_B_list = np.where(nifH_UCYN_B > 0)
-UCYN_C_list = np.where(nifH_UCYN_C > 0)
-Richelia_list = np.where(nifH_Richelia > 0)
-Calothrix_list = np.where(nifH_Calothrix > 0)
-Gamma_list = np.where(nifH_Gamma > 0)
-
-
-#%% Absence of nifH (zeros or n.d.)
-
-no_Tri_list = np.where(nifH_Tri == 0)
-no_UCYN_A_list = np.where(nifH_UCYN_A == 0) 
-no_UCYN_B_list = np.where(nifH_UCYN_B == 0)
-no_UCYN_C_list = np.where(nifH_UCYN_C == 0)
-no_Richelia_list = np.where(nifH_Richelia == 0)
-no_Calothrix_list = np.where(nifH_Calothrix == 0)
-no_Gamma_list = np.where(nifH_Gamma == 0)
+#Tri_list = np.where(nifH_Tri > 0)
+#UCYN_A_list = np.where(nifH_UCYN_A > 0) 
+#UCYN_B_list = np.where(nifH_UCYN_B > 0)
+#UCYN_C_list = np.where(nifH_UCYN_C > 0)
+#Richelia_list = np.where(nifH_Richelia > 0)
+#Calothrix_list = np.where(nifH_Calothrix > 0)
+#Gamma_list = np.where(nifH_Gamma > 0)
+#
+#
+##%% Absence of nifH (zeros or n.d.)
+#
+#no_Tri_list = np.where(nifH_Tri == 0)
+#no_UCYN_A_list = np.where(nifH_UCYN_A == 0) 
+#no_UCYN_B_list = np.where(nifH_UCYN_B == 0)
+#no_UCYN_C_list = np.where(nifH_UCYN_C == 0)
+#no_Richelia_list = np.where(nifH_Richelia == 0)
+#no_Calothrix_list = np.where(nifH_Calothrix == 0)
+#no_Gamma_list = np.where(nifH_Gamma == 0)
 
 
 #%%############################################################################
@@ -615,8 +615,10 @@ no_Gamma_list = np.where(nifH_Gamma == 0)
 ###############################################################################
 
 # mask where Darwin diazotroph biomass is simulated
-mask = np.where((diaz_int > 1e-05), 1, 0)
-mask_out = np.where((diaz_int < 1e-05), 1, 0)
+thresh = 1e-05
+
+mask = np.where((diaz_int > thresh), 1, 0)
+mask_out = np.where((diaz_int < thresh), 1, 0)
 
 
 #SM: What are the correct values for lat, lon here?
@@ -659,6 +661,131 @@ print(OUT + False_Pos)
 
 # SM: to calculate the values for coincide from IN and OUT - just to double check
 # ((OUT*len(absence[0]))+(IN*len(presence[0])))/(len(nifH_sum))
+
+
+#%% Repeat the presence/absence comparison on seasonal timescales
+
+# reminder: diaz_DJF, diaz_JJA, diaz_MAM, diaz_SON are the seasonal arrays for the model output
+seas_handle = 3 # chose season here
+
+diaz_seasonal = [diaz_DJF, diaz_JJA, diaz_MAM, diaz_SON]
+
+# note, months in the dataset are reported from 1-12 (not 0-11)
+DJF = (diazotroph_observations['MONTH']==12) | (diazotroph_observations['MONTH']==1) | (diazotroph_observations['MONTH']==2)
+JJA = (diazotroph_observations['MONTH']==3) | (diazotroph_observations['MONTH']==4) | (diazotroph_observations['MONTH']==5)
+MAM = (diazotroph_observations['MONTH']==6) | (diazotroph_observations['MONTH']==7) | (diazotroph_observations['MONTH']==8)
+SON = (diazotroph_observations['MONTH']==9) | (diazotroph_observations['MONTH']==10) | (diazotroph_observations['MONTH']==11)
+
+seasons_list = [DJF, JJA, MAM, SON]
+
+nifH_seas = diazotroph_observations[mytypes_short][seasons_list[seas_handle]]
+nifH_sum_seas = nifH_seas.sum(1)
+
+mask_seas = np.where((diaz_seasonal[seas_handle] > thresh), 1, 0)
+
+I_in_seas = si.RegularGridInterpolator((lat, lon), mask_seas, 'nearest',
+                               bounds_error=False, fill_value=None)
+
+mask_darwin_nifH_seas = I_in_seas(latlon).astype(int)
+mask_nifH_seas = np.where(seasons_list[seas_handle] & nifH_sum > 0, 1, 0)
+
+ncoincide_seas = np.sum(mask_nifH_seas == mask_darwin_nifH_seas)
+COR = ncoincide_seas/len(nifH)
+print(COR)
+
+# presence/absence on seasonal scales to plot
+presence_seas = np.where(mask_nifH_seas)
+abs_nifH = np.where(nifH_matrix[:,-1] == 0,1,0)
+mask_nifH_seas_abs = np.where(seasons_list[seas_handle] & abs_nifH, 1, 0)
+absence_seas = np.where(mask_nifH_seas_abs)
+
+#%% Repeat the presence/absence comparison on seasonal timescales
+
+# reminder: diaz_DJF, diaz_JJA, diaz_MAM, diaz_SON are the seasonal arrays for the model output
+diaz_seasonal = [diaz_DJF, diaz_JJA, diaz_MAM, diaz_SON]
+
+# note, months in the dataset are reported from 1-12 (not 0-11)
+DJF = (diazotroph_observations['MONTH']==12) | (diazotroph_observations['MONTH']==1) | (diazotroph_observations['MONTH']==2)
+JJA = (diazotroph_observations['MONTH']==3) | (diazotroph_observations['MONTH']==4) | (diazotroph_observations['MONTH']==5)
+MAM = (diazotroph_observations['MONTH']==6) | (diazotroph_observations['MONTH']==7) | (diazotroph_observations['MONTH']==8)
+SON = (diazotroph_observations['MONTH']==9) | (diazotroph_observations['MONTH']==10) | (diazotroph_observations['MONTH']==11)
+
+seasons_list = [DJF, JJA, MAM, SON]
+
+plt.rcParams.update({'font.size': 10})
+col = cm.cm.haline
+pres_cols = ['red','orange','purple','magenta']
+abs_cols = ['lightgreen','green','lime','w']
+
+
+fig,ax = plt.subplots(4,1,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,12),sharex=True,sharey=True)
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+
+for i in range(0,4):
+    nifH_seas = diazotroph_observations[mytypes_short][seasons_list[i]]
+    nifH_sum_seas = nifH_seas.sum(1)
+
+    mask_seas = np.where((diaz_seasonal[i] > thresh), 1, 0)
+    mask_darwin_nifH_seas = I_in_seas(latlon).astype(int)
+    mask_nifH_seas = np.where(seasons_list[i] & nifH_sum > 0, 1, 0)
+
+    ncoincide_seas = np.sum(mask_nifH_seas == mask_darwin_nifH_seas)
+    COR = ncoincide_seas/len(nifH)
+    #print(COR)
+
+# presence/absence on seasonal scales to plot
+    presence_seas = np.where(mask_nifH_seas)
+    abs_nifH = np.where(nifH_matrix[:,-1] == 0,1,0)
+    mask_nifH_seas_abs = np.where(seasons_list[i] & abs_nifH, 1, 0)
+    absence_seas = np.where(mask_nifH_seas_abs)
+
+    ax[i].coastlines(color='#888888',linewidth=1.5)
+    ax[i].add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+    ax[i].xaxis.set_major_formatter(lon_formatter)
+    ax[i].yaxis.set_major_formatter(lat_formatter)
+    ax[i].set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+    ax[i].set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+    ax[i].text(0.8,0.9,''+(str(season[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[i].text(1.05,0.5,'coincidence: '+(str("{:.2%}".format(COR)+'')),transform=ax[i].transAxes, size=10, rotation=90.,ha="center", va="center")#,bbox=dict(boxstyle="square",facecolor='w'))
+    ax[i].contourf(lon,lat,mask_seas,cmap=col,extend='max')
+    ax[i].plot(lon_nifH[presence_seas[0]],lat_nifH[presence_seas[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
+    ax[i].plot(lon_nifH[absence_seas[0]],lat_nifH[absence_seas[0]],'x',color='m',label='nifH below LOD')
+    ax[i].legend(loc='lower center',ncol=2)#,bbox_to_anchor=(1.15, 1.0))
+
+#ax[0].set_title('Seasonal nutrient ratio P:N')
+#cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_seas.png', bbox_inches='tight', dpi=300)
+
+#%% calculate the percentage of coincidence as function of the threshold
+
+#Fe:N
+new_thresh = np.linspace(1e-5,1e-1,5) # choose the new ratio for the comparison here
+new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
+new_corr = np.zeros_like(new_thresh)
+
+for i in range(len(new_thresh)):
+    mask = np.where((diaz_int > new_thresh[i]), 1, 0)
+    I_in = si.RegularGridInterpolator((lat, lon), mask, 'nearest', bounds_error=False, fill_value=None)
+    mask_darwin_nifH = I_in(latlon).astype(int)
+    mask_nifH = np.where(nifH_sum > 0, 1, 0)
+
+    ncoincide = np.sum(mask_nifH == mask_darwin_nifH)
+    new_corr[i] = ncoincide/len(nifH)
+
+
+#%% plot the percentage of coincidence as function of the threshold
+
+fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
+ax.plot(new_corr, new_thresh)#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
+#ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
+#ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+ax.set_xlabel('coincidence')
+ax.set_ylabel('threshold')
+ax.set_yscale('log')
+#ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin.png', bbox_inches='tight', dpi=300)
 
 #%%############################################################################ 
 ################### Best figure for now #######################################
@@ -743,8 +870,33 @@ plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out.png', bbox_inches='tight', dpi=300)
 
 
-#%% 
+#%% Plot the seasonal presence/absence analysis
 
+#col = plt.get_cmap('RdBu_r')
+col = cm.cm.haline
+
+fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+ax.coastlines(color='#888888',linewidth=1.5)
+ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+ax.xaxis.set_major_formatter(lon_formatter)
+ax.yaxis.set_major_formatter(lat_formatter)
+ax.set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
+#ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+c0 = ax.contourf(lon,lat,mask_seas,cmap=col,extend='max')
+ax.plot(lon_nifH[presence_seas[0]],lat_nifH[presence_seas[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
+ax.plot(lon_nifH[absence_seas[0]],lat_nifH[absence_seas[0]],'x',color='m',label='nifH below LOD')
+ax.legend(loc='best')
+#fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
+#cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
+#cbar = fig.colorbar(c0, cax=cbar_ax)
+#cbar.set_label('mmolC m$^{-2}$',rotation=90, position=(0.5,0.5))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out.png', bbox_inches='tight', dpi=300)
+
+#%%
 
 #col = plt.get_cmap('RdBu_r')
 col = cm.cm.haline
