@@ -123,7 +123,7 @@ diaz_SON = np.mean(diaz_mon[8:10,:,:],axis=0)
 ################### Tang and Cassar database ##################################
 ###############################################################################
 
-diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_mod.csv')
+diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_mod_newdata.csv')
 #print(diazotroph_observations)
 
 # Single columns of nifH database in list format
@@ -191,13 +191,12 @@ bm_nifH_high = np.zeros(shape)
 
 for i in range(0,len(mytypes_short)):
     bm_nifH_low[:,i] = nifH[mytypes_short[i]]*conversion_low[i]
-bm_nifH_low_tot = np.nansum(bm_nifH_low,axis=1)
-#bm_nifH_low_tot = bm_nifH_low.sum(1)
+#bm_nifH_low_tot = np.sum(bm_nifH_low,axis=1)
+bm_nifH_low_tot = bm_nifH_low.sum(1)
 
 for i in range(0,len(mytypes_short)):
     bm_nifH_high[:,i] = nifH[mytypes_short[i]]*conversion_high[i]
 bm_nifH_high_tot = np.nansum(bm_nifH_high,axis=1)
-#bm_nifH_high_tot = bm_nifH_high.sum(1)
 
 #%% Prepare interpolator - Regions from Darwin mask
 
@@ -369,7 +368,6 @@ bxpstats = []
 ax.set_ylabel('nifH Gene (x10$^{6}$ copies m$^{-2}$)')
 ax.set_title('mean nifH abundance')
 ax.set_yscale('log')
-#ax.set_xlim(right=0) 
 ax.set_ylim([ymin,ymax])
 ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
 #ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
@@ -396,8 +394,8 @@ for i in regs:
         c2 = ax.bxp([nif_B_stats], positions=[pos-0.3], showmeans=True, meanprops=meanprops_B, medianprops=medianprops, showfliers=False, meanline=False)
         c3 = ax.bxp([nif_Ric_stats], positions=[pos-0.15], showmeans=True, meanprops=meanprops_Ric, medianprops=medianprops, showfliers=False, meanline=False)
         c4 = ax.bxp([nif_tot_stats], positions=[pos], showmeans=True, meanprops=meanprops_tot, medianprops=medianprops, showfliers=False, meanline=False)
-        if pos < 10:
-            ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
+
+        ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
         ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
 
@@ -468,8 +466,8 @@ for i in regs:
         ax.bxp([bm_Ric_stats], positions=[pos-0.15], boxprops=boxprops_Ric, **bxpkw)
 
         #ax.text(i*0.1,0.9,''+(str(obs_count[i])+''))
-        if pos < 10:
-            ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
+
+        ax.axvline(pos+0.2, color='k', ls='dashed',linewidth=1)
         ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
 
@@ -575,8 +573,8 @@ for i in regs:
         bm_darwin_stats = statsfun3(mean_bm_darwin,'')
         bm0 = ax.bxp([mean_bm_stats], positions=[pos-0.1], boxprops=boxprops_tot, **bxpkw2)
         bm1 = ax.bxp([bm_darwin_stats], positions=[pos+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
-        if pos < 10:
-            ax.axvline(pos+0.5, color='k', ls='dashed',linewidth=1)
+
+        ax.axvline(pos+0.5, color='k', ls='dashed',linewidth=1)
         ax.annotate(str(np.sum(nifH_reg==i)), (pos+.2,2*1e03), va='baseline', ha='center', xycoords='data')
         pos += 1
 
@@ -701,48 +699,6 @@ presence_seas = np.where(mask_nifH_seas)
 abs_nifH = np.where(nifH_matrix[:,-1] == 0,1,0)
 mask_nifH_seas_abs = np.where(seasons_list[seas_handle] & abs_nifH, 1, 0)
 absence_seas = np.where(mask_nifH_seas_abs)
-
-#%% Repeat the presence/absence comparison for varying thresholds in Darwin
-
-new_thresh = [1e-4,1e-3,1e-2,1e-1]
-#new_t = ['1e-4','1e-3','1e-2','1e-1']
-#new_corr = np.zeros_like(new_thresh)
-
-col = cm.cm.haline
-
-fig,ax = plt.subplots(4,1,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,12),sharex=True,sharey=True)
-lon_formatter = LongitudeFormatter(zero_direction_label=True)
-lat_formatter = LatitudeFormatter()
-
-for i in range(0,4):
-    mask = np.where((diaz_int > new_thresh[i]), 1, 0)
-    I_in = si.RegularGridInterpolator((lat, lon), mask, 'nearest', bounds_error=False, fill_value=None)
-    mask_darwin_nifH = I_in(latlon).astype(int)
-    mask_nifH = np.where(nifH_sum > 0, 1, 0)
-
-    mask_darwin_nifH = I_in(latlon).astype(int)
-    mask_nifH = np.where(nifH_sum > 0, 1, 0)
-
-    ncoincide = np.sum(mask_nifH == mask_darwin_nifH)
-    COR = ncoincide/len(nifH)
-
-
-    ax[i].coastlines(color='#888888',linewidth=1.5)
-    ax[i].add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
-    ax[i].xaxis.set_major_formatter(lon_formatter)
-    ax[i].yaxis.set_major_formatter(lat_formatter)
-    ax[i].set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
-    ax[i].set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
-    ax[i].text(0.8,0.9,''+(str(new_thresh[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-    ax[i].text(1.05,0.5,'coincidence: '+(str("{:.2%}".format(COR)+'')),transform=ax[i].transAxes, size=10, rotation=90.,ha="center", va="center")#,bbox=dict(boxstyle="square",facecolor='w'))
-    ax[i].contourf(lon,lat,mask,cmap=col,extend='max')
-    ax[i].plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
-    ax[i].plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='nifH below LOD')
-    ax[i].legend(loc='lower center',ncol=2)#,bbox_to_anchor=(1.15, 1.0))
-
-#ax[0].set_title('Seasonal nutrient ratio P:N')
-#cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_var-thresh.png', bbox_inches='tight', dpi=300)
 
 #%% Repeat the presence/absence comparison on seasonal timescales
 
