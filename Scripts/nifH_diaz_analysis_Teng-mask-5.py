@@ -621,7 +621,6 @@ abs_month = nifH_matrix[absence,3]
 thresh = 1e-05
 
 mask = np.where((diaz_int > thresh), 1, 0)
-mask_out = np.where((diaz_int < thresh), 1, 0)
 
 
 #SM: What are the correct values for lat, lon here?
@@ -747,7 +746,54 @@ for i in range(0,4):
 
 #ax[0].set_title('Seasonal nutrient ratio P:N')
 #cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
-fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_var-thresh.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_var-thresh.png', bbox_inches='tight', dpi=300)
+
+#%% Repeat the presence/absence comparison for varying thresholds in Darwin
+plt.rcParams.update({'font.size': 10})
+
+new_thresh = [1e-4,1e-3,1e-2,1e-1,1e0,1e1]
+#new_t = ['1e-4','1e-3','1e-2','1e-1']
+#new_corr = np.zeros_like(new_thresh)
+
+lon180 = np.mod(np.roll(lon,180)+180, 360) - 180
+
+col = cm.cm.haline
+
+fig,ax = plt.subplots(3,2,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,6),sharex=True,sharey=True)
+lon_formatter = LongitudeFormatter(zero_direction_label=True)
+lat_formatter = LatitudeFormatter()
+fig.subplots_adjust(hspace = 0.1, wspace=0.2)
+ax = ax.ravel()
+
+for i in range(0,6):
+    mask = np.where((diaz_int > new_thresh[i]), 1, 0)
+    I_in = si.RegularGridInterpolator((lat, lon), mask, 'nearest', bounds_error=False, fill_value=None)
+    mask_darwin_nifH = I_in(latlon).astype(int)
+    mask_nifH = np.where(nifH_sum > 0, 1, 0)
+
+    mask_darwin_nifH = I_in(latlon).astype(int)
+    mask_nifH = np.where(nifH_sum > 0, 1, 0)
+    mask180 = np.roll(mask, 180, 1)
+    ncoincide = np.sum(mask_nifH == mask_darwin_nifH)
+    COR = ncoincide/len(nifH)
+
+
+    ax[i].coastlines(color='#888888',linewidth=1.5)
+    ax[i].add_feature(cfeature.NaturalEarthFeature('physical', 'land', '50m', edgecolor='none', facecolor=cfeature.COLORS['land']))
+    ax[i].xaxis.set_major_formatter(lon_formatter)
+    ax[i].yaxis.set_major_formatter(lat_formatter)
+    ax[i].set_xticks([0,60,120,180,240,300,360], crs=ccrs.PlateCarree())
+    ax[i].set_yticks([-60, -30, 0, 30, 60], crs=ccrs.PlateCarree())
+    ax[i].text(0.8,0.9,''+(str(new_thresh[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+    ax[i].text(1.05,0.5,'coincidence: '+(str("{:.2%}".format(COR)+'')),transform=ax[i].transAxes, size=10, rotation=90.,ha="center", va="center")#,bbox=dict(boxstyle="square",facecolor='w'))
+    ax[i].contourf(lon180,lat,mask180,cmap=col,extend='max')
+    ax[i].plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
+    ax[i].plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='nifH non-detect')
+    ax[1].legend(loc='upper right',ncol=2,bbox_to_anchor=(1, 1.3))
+
+#ax[0].set_title('Seasonal nutrient ratio P:N')
+#cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
+#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_var-thresh_2.png', bbox_inches='tight', dpi=300)
 
 #%% Repeat the presence/absence comparison on seasonal timescales
 
@@ -810,8 +856,8 @@ for i in range(0,4):
 #%% calculate the percentage of coincidence as function of the threshold
 
 #Fe:N
-new_thresh = np.linspace(1e-5,1e-1,5) # choose the new ratio for the comparison here
-new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
+new_thresh = np.linspace(1e-5,1e1,100) # choose the new ratio for the comparison here
+#new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
 new_corr = np.zeros_like(new_thresh)
 
 for i in range(len(new_thresh)):
@@ -835,7 +881,42 @@ ax.set_ylabel('threshold')
 ax.set_yscale('log')
 #ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin_2.png', bbox_inches='tight', dpi=300)
+
+#%% calculate coinciding presences and coinciding non-detects separately
+#Fe:N
+
+new_thresh = np.linspace(1e-5,1e1,100) # choose the new ratio for the comparison here
+#new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
+new_pos = np.zeros_like(new_thresh)
+new_abs = np.zeros_like(new_thresh)
+
+for i in range(len(new_thresh)):
+    mask = np.where((diaz_int > new_thresh[i]), 1, 0)
+    I_in = si.RegularGridInterpolator((lat, lon), mask, 'nearest', bounds_error=False, fill_value=None)
+    mask_darwin_nifH = I_in(latlon).astype(int)
+    mask_nifH = np.where(nifH_sum > 0, 1, 0)
+
+    nboth = np.sum(mask_nifH & mask_darwin_nifH)
+    new_pos[i] = nboth/len(presence[0])
+    nnon = np.sum((~mask_nifH) & ~mask_darwin_nifH)
+    new_abs[i] = nnon/len(absence[0])
+
+#something is not right with the absence part. fix that!
+    
+#%% plot the percentage of coincidence as function of the threshold
+
+fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
+ax.plot(new_pos, new_thresh)#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
+#ax.plot(new_abs, new_thresh)
+#ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
+#ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+ax.set_xlabel('coincidence')
+ax.set_ylabel('threshold')
+ax.set_yscale('log')
+#ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin_2.png', bbox_inches='tight', dpi=300)
 
 #%%############################################################################ 
 ################### Best figure for now #######################################
