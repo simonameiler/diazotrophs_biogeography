@@ -886,10 +886,12 @@ plt.show()
 #%% calculate coinciding presences and coinciding non-detects separately
 #Fe:N
 
-new_thresh = np.linspace(1e-5,1e1,100) # choose the new ratio for the comparison here
+#new_thresh = np.logspace(1e-5,1e1)#,100) # choose the new ratio for the comparison here
+new_thresh = np.logspace(-5,1)#,100)
 #new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
 new_pos = np.zeros_like(new_thresh)
 new_abs = np.zeros_like(new_thresh)
+new_corr = np.zeros_like(new_thresh)
 
 for i in range(len(new_thresh)):
     mask = np.where((diaz_int > new_thresh[i]), 1, 0)
@@ -899,21 +901,29 @@ for i in range(len(new_thresh)):
 
     nboth = np.sum(mask_nifH & mask_darwin_nifH)
     new_pos[i] = nboth/len(presence[0])
-    nnon = np.sum((~mask_nifH) & ~mask_darwin_nifH)
+    ncoincide = np.sum(mask_nifH == mask_darwin_nifH)
+    new_corr[i] = ncoincide/len(nifH)
+    #nnon = np.sum((~mask_nifH) & ~mask_darwin_nifH) # this gives a wrong solution. I don't know why!
+    nnon = np.sum((mask_nifH==0) & (mask_darwin_nifH==0)) #the next two lines yield the same
+    #nnon = ncoincide-nboth
     new_abs[i] = nnon/len(absence[0])
-
-#something is not right with the absence part. fix that!
     
 #%% plot the percentage of coincidence as function of the threshold
 
 fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
-ax.plot(new_pos, new_thresh)#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
-#ax.plot(new_abs, new_thresh)
+#ax.plot(new_corr, new_thresh,label='both')
+#ax.plot(new_pos, new_thresh,label='pres')#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
+#ax.plot(new_abs, new_thresh,label='abs')
+ax.plot(new_thresh,new_corr,label='both')
+ax.plot(new_thresh,new_pos,label='presence')#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
+ax.plot(new_thresh,new_abs,label='non-detect')
 #ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
 #ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
-ax.set_xlabel('coincidence')
-ax.set_ylabel('threshold')
-ax.set_yscale('log')
+ax.set_ylabel('accuracy (-)')
+ax.set_xlabel('threshold (mmolC m$^{-2}$)')
+ax.set_xscale('log')
+ax.legend(loc='best')
+#ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
 #ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin_2.png', bbox_inches='tight', dpi=300)
