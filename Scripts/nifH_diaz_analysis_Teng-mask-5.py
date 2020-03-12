@@ -182,6 +182,21 @@ Ric_high = 1.0916e-05
 conversion_low = [tri_low, UCYN_low, UCYN_low, Ric_low]
 conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
+#%% Reverse biomass to cells per volume
+
+#cells/m3 --> for cells/l just multiply with 1000
+liter = 100
+
+tri_l = 164.4*liter
+tri_h = 0.288*liter
+UCYN_l = 20000*liter
+UCYN_h = 857.14*liter
+Ric_l = 1739.13*liter
+Ric_h = 916.03*liter
+
+conversion_l = [tri_l, UCYN_l, UCYN_l, Ric_l]
+conversion_h = [tri_h, UCYN_h, UCYN_h, Ric_h]
+
 #%% Analyse total biomass from nifH at every point of observation
 
 # Create empty array and fill with values of converted biomass for each species from nifH abundance
@@ -401,6 +416,8 @@ for i in regs:
         ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
 
+ax.set_xlim(-1+.2, pos-1+.2) 
+
 means = [c['means'][0] for c in [c0,c1,c2,c3,c4]]
 ax.legend(means, 'Tri A B Ric tot'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_nifH_abundance_species-specific.png', bbox_inches='tight', dpi=300)
@@ -473,6 +490,7 @@ for i in regs:
         ax.annotate(str(np.sum(nifH_reg==i)), (pos-.4,2*ymin), va='baseline', ha='center', xycoords='data')
         pos += 1
 
+ax.set_xlim(-1+.2, pos-1+.2) 
 means = [c['means'][0] for c in [c0,c1,c2,c3]]
 ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))        
 #fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm-from-nifH_species-specific.png', bbox_inches='tight', dpi=300)
@@ -481,71 +499,25 @@ ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12,
         # different species here. Maybe first calculate a aggregate biomass estimate from nifH and then compare it to Darwin?
         # Still, these results might be biased towards the few observations...
 
-#%% Calculate mean biomass from nifH abundance over all species 
-
-#def statsfun4(x, label):
-#    stats = {
-#        'med': x.mean(),
-#        'q1': x.mean(),
-#        'q3': x.mean(),
-#        'whislo': x.mean(),
-#        'whishi': x.mean(),
-#        'mean': x.mean(),
-#        'label': label,
-#        }
-#    return stats
-#
-## maybe use this or a similar approach to display std around the mean of darwin biomass for each region
-#def statsfun5(x, label):
-#    stats = {
-#        'med': x.mean(),
-#        'q1': x.std(),
-#        'q3': x.std(),
-#        'whislo': x.mean(),
-#        'whishi': x.mean(),
-#        'mean': x.mean(),
-#        'label': label,
-#        }
-#    return stats
-#
-#meanprops_tot_d = dict(marker='o', markeredgecolor='black', markerfacecolor='blue')
-#
-#ymin = 1e-03
-#ymax = 1e03
-#
-#fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
-#bxpstats = []
-#ax.set_ylabel('biomass (mmol C m-2)')
-#ax.set_title('biomass from nifH abundance and Darwin')
-#ax.set_yscale('log')
-#ax.set_ylim([ymin,ymax])
-#ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
-#               alpha=0.5)
-#ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
-#               alpha=0.5)
-#for i in regs:
-#    if np.sum(nifH_reg==i) > 0:
-#        #mean_bm_low = (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_low[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_low[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_low[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_low[3])
-#        #mean_bm_high =  (np.mean(nifH[mytypes_short[0]][nifH_reg==i])*conversion_high[0])+(np.mean(nifH[mytypes_short[1]][nifH_reg==i])*conversion_high[1])+(np.mean(nifH[mytypes_short[2]][nifH_reg==i])*conversion_high[2])+(np.mean(nifH[mytypes_short[3]][nifH_reg==i])*conversion_high[3])
-#        mean_bm_low = pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_low[j] for j in range(4)]).mean()
-#        mean_bm_high =  pd.concat([nifH[mytypes_short[j]][nifH_reg==i]*conversion_high[j] for j in range(4)]).mean()
-#        mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
-#        bm_darwin = diaz_int[reg_darwin==i]
-#        mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
-#        bm_darwin_stats = statsfun4(bm_darwin,'D')
-#        ax.bxp([mean_bm_stats], positions=[i-0.1], showmeans=False, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
-#        ax.bxp([bm_darwin_stats], positions=[i+0.1], showmeans=True, meanprops=meanprops_tot_d, patch_artist=True, medianprops=medianprops, showfliers=False, meanline=False)
-
-#fig.savefig('/Users/meilers/MITinternship/Plots/mean_bm_darwin.png', bbox_inches='tight', dpi=300)
-        
-
 #%% Analyse total biomass from nifH at every point of observation and compare to Darwin at this point
+def statsfun4(x, label):
+    stats = {
+        'med': np.median(x),
+        'q1': x.mean(),
+        'q3': x.mean(),
+        'whislo': np.percentile(x, 10.),
+        'whishi': np.percentile(x, 90.),
+        'mean': x.mean(),
+        'label': label,
+        }
+    return stats
 
 bm_darwin = diaz_int[j_nifH,i_nifH]
 
 boxprops_darwin = dict(edgecolor='black', facecolor='lightblue')
 meanprops_bm = dict(marker='D', markeredgecolor='black', markerfacecolor='green')
 meanprops_dar = dict(marker='D', markeredgecolor='black', markerfacecolor='blue')
+medianprops_dar = dict(marker='*', markeredgecolor='red', markerfacecolor='red')
 bxpkw2 = dict(showfliers=False, showmeans=True, meanprops=meanprops_bm, medianprops=medianprops, patch_artist=True)
 bxpkw2dar = dict(showfliers=False, showmeans=True, meanprops=meanprops_dar, medianprops=medianprops, patch_artist=True)
 
@@ -572,7 +544,7 @@ for i in regs:
         mean_bm_mean = np.append(mean_bm_high,mean_bm_low)
         mean_bm_darwin = bm_darwin[nifH_reg==i]
         mean_bm_stats = statsfun3(mean_bm_mean,str(region_labels[i]))
-        bm_darwin_stats = statsfun3(mean_bm_darwin,'')
+        bm_darwin_stats = statsfun4(mean_bm_darwin,'')
         bm0 = ax.bxp([mean_bm_stats], positions=[pos-0.1], boxprops=boxprops_tot, **bxpkw2)
         bm1 = ax.bxp([bm_darwin_stats], positions=[pos+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
         if pos < 10:
@@ -580,6 +552,7 @@ for i in regs:
         ax.annotate(str(np.sum(nifH_reg==i)), (pos+.2,2*1e03), va='baseline', ha='center', xycoords='data')
         pos += 1
 
+ax.set_xlim(-1+.5, pos-1+.5) 
 means = [c['means'][0] for c in [bm0,bm1]]
 ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 0.5))
 
@@ -590,28 +563,6 @@ ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 
 # find a way to display the data on monthly scales
 pres_month = nifH_matrix[presence,3]
 abs_month = nifH_matrix[absence,3]
-
-#%% Manipulating the nifH data to bring it into mappable form - SPECIES SPECIFIC
-
-#Tri_list = np.where(nifH_Tri > 0)
-#UCYN_A_list = np.where(nifH_UCYN_A > 0) 
-#UCYN_B_list = np.where(nifH_UCYN_B > 0)
-#UCYN_C_list = np.where(nifH_UCYN_C > 0)
-#Richelia_list = np.where(nifH_Richelia > 0)
-#Calothrix_list = np.where(nifH_Calothrix > 0)
-#Gamma_list = np.where(nifH_Gamma > 0)
-#
-#
-##%% Absence of nifH (zeros or n.d.)
-#
-#no_Tri_list = np.where(nifH_Tri == 0)
-#no_UCYN_A_list = np.where(nifH_UCYN_A == 0) 
-#no_UCYN_B_list = np.where(nifH_UCYN_B == 0)
-#no_UCYN_C_list = np.where(nifH_UCYN_C == 0)
-#no_Richelia_list = np.where(nifH_Richelia == 0)
-#no_Calothrix_list = np.where(nifH_Calothrix == 0)
-#no_Gamma_list = np.where(nifH_Gamma == 0)
-
 
 #%%############################################################################
 ### Quantify how many of the nifH abundances are in the predicted province ####
@@ -704,13 +655,14 @@ absence_seas = np.where(mask_nifH_seas_abs)
 #%% Repeat the presence/absence comparison for varying thresholds in Darwin
 plt.rcParams.update({'font.size': 10})
 
-new_thresh = [1e-4,1e-3,1e-2,1e-1]
+new_thresh = [0.01,0.1,1.0,5.0]
 #new_t = ['1e-4','1e-3','1e-2','1e-1']
 #new_corr = np.zeros_like(new_thresh)
 
 lon180 = np.mod(np.roll(lon,180)+180, 360) - 180
 
-col = cm.cm.haline
+col = plt.get_cmap('RdBu_r')
+#col = cm.cm.haline
 
 fig,ax = plt.subplots(2,2,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4.5),sharex=True,sharey=True)
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
@@ -739,9 +691,9 @@ for i in range(0,4):
     ax[i].set_yticks([-60, -30, 0, 30, 60], crs=ccrs.PlateCarree())
     ax[i].text(0.8,0.9,''+(str(new_thresh[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
     ax[i].text(1.05,0.5,'coincidence: '+(str("{:.2%}".format(COR)+'')),transform=ax[i].transAxes, size=10, rotation=90.,ha="center", va="center")#,bbox=dict(boxstyle="square",facecolor='w'))
-    ax[i].contourf(lon180,lat,mask180,cmap=col,extend='max')
-    ax[i].plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='orange',label='nifH present')#label='Trichodesmium')
-    ax[i].plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='m',label='nifH non-detect')
+    ax[i].contourf(lon180,lat,mask180,cmap=col,levels=np.linspace(-1,2,21),extend='max')
+    ax[i].plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='r',markersize=4,label='nifH present')#label='Trichodesmium')
+    ax[i].plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='b',markersize=4,label='nifH non-detect')
     ax[1].legend(loc='upper right',ncol=2,bbox_to_anchor=(1, 1.3))
 
 #ax[0].set_title('Seasonal nutrient ratio P:N')
@@ -853,36 +805,6 @@ for i in range(0,4):
 #cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
 #fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_seas.png', bbox_inches='tight', dpi=300)
 
-#%% calculate the percentage of coincidence as function of the threshold
-
-#Fe:N
-new_thresh = np.linspace(1e-5,1e1,100) # choose the new ratio for the comparison here
-#new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
-new_corr = np.zeros_like(new_thresh)
-
-for i in range(len(new_thresh)):
-    mask = np.where((diaz_int > new_thresh[i]), 1, 0)
-    I_in = si.RegularGridInterpolator((lat, lon), mask, 'nearest', bounds_error=False, fill_value=None)
-    mask_darwin_nifH = I_in(latlon).astype(int)
-    mask_nifH = np.where(nifH_sum > 0, 1, 0)
-
-    ncoincide = np.sum(mask_nifH == mask_darwin_nifH)
-    new_corr[i] = ncoincide/len(nifH)
-
-
-#%% plot the percentage of coincidence as function of the threshold
-
-fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
-ax.plot(new_corr, new_thresh)#,levels=np.linspace(0.5e14,3.5e14,7),extend='both')
-#ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
-#ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
-ax.set_xlabel('coincidence')
-ax.set_ylabel('threshold')
-ax.set_yscale('log')
-#ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
-plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin_2.png', bbox_inches='tight', dpi=300)
-
 #%% calculate coinciding presences and coinciding non-detects separately
 #Fe:N
 
@@ -920,13 +842,96 @@ ax.plot(new_thresh,new_abs,label='non-detect')
 #ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
 #ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
 ax.set_ylabel('accuracy (-)')
-ax.set_xlabel('threshold (mmolC m$^{-2}$)')
+ax.set_xlabel('threshold (mmolC m$^{-2}$)',labelpad=0.1)
 ax.set_xscale('log')
-ax.legend(loc='best')
+#ax.legend(ncol=3,loc='lower center',bbox_to_anchor=(0.5, -0.55))
+ax.legend(loc='best')#,bbox_to_anchor=(0.5, -0.55))
 #ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
 #ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 plt.show()
 #fig.savefig('/Users/meilers/MITinternship/Plots/thresh-vs-coin_2.png', bbox_inches='tight', dpi=300)
+
+#%% Plot cell abundance from biomass using varying values for the biomass threshold and calculating the
+# resulting cell abundance back using the conversion factors
+
+new_thresh = np.logspace(-2,1)#,100)
+new_Tri_cell = np.zeros_like(new_thresh)
+new_Tri_cell_l = np.zeros_like(new_thresh)
+new_Tri_cell_h = np.zeros_like(new_thresh)
+new_UCYN_cell_l = np.zeros_like(new_thresh)
+new_UCYN_cell_h = np.zeros_like(new_thresh)
+new_Ric_cell_l = np.zeros_like(new_thresh)
+new_Ric_cell_h = np.zeros_like(new_thresh)
+
+for i in range(len(new_thresh)):
+    new_Tri_cell_l[i] = new_thresh[i]*tri_l
+    new_Tri_cell_h[i] = new_thresh[i]*tri_h
+    new_UCYN_cell_l[i] = new_thresh[i]*UCYN_l
+    new_UCYN_cell_h[i] = new_thresh[i]*UCYN_h
+    new_Ric_cell_l[i] = new_thresh[i]*Ric_l
+    new_Ric_cell_h[i] = new_thresh[i]*Ric_h
+
+#%% Plot the results
+fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
+ax.plot(new_thresh,new_Tri_cell_l,linewidth=1.0,linestyle='dashed',color='k',label='Tri')
+ax.plot(new_thresh,new_Tri_cell_h,linewidth=1.0,linestyle='dashed',color='k')#,label='Tri high')
+ax.plot(new_thresh,new_UCYN_cell_l,linewidth=1.0,linestyle='dashed',color='b',label='UCYN')
+ax.plot(new_thresh,new_UCYN_cell_h,linewidth=1.0,linestyle='dashed',color='b')#,label='UCYN high')
+ax.plot(new_thresh,new_Ric_cell_l,linewidth=1.0,linestyle='dashed',color='g',label='Ric')
+ax.plot(new_thresh,new_Ric_cell_h,linewidth=1.0,linestyle='dashed',color='g')#,label='Ric high')
+#ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
+#ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+ax.set_ylabel('cell count (cells l$^{-1}$)')
+ax.set_xlabel('biomass (mmol C m$^{-2}$)',labelpad=0.1)
+ax.set_xscale('log')
+ax.set_yscale('log')
+#ax.legend(ncol=3,loc='lower center',bbox_to_anchor=(0.5, -0.55))
+ax.legend(loc='best')#,bbox_to_anchor=(0.5, -0.55))
+#ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
+#ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.show()
+#fig.savefig('/Users/meilers/MITinternship/Plots/bm-vs-cells.png', bbox_inches='tight', dpi=300)
+
+
+#%% Plot cell abundance from biomass using varying values for the biomass threshold and calculating the
+# resulting cell abundance back using the conversion factors
+
+new_thresh = np.logspace(-2,1)#,100)
+new_Tri_bm = np.zeros_like(new_thresh)
+new_Tri_bm_l = np.zeros_like(new_thresh)
+new_Tri_bm_h = np.zeros_like(new_thresh)
+new_UCYN_bm_l = np.zeros_like(new_thresh)
+new_UCYN_bm_h = np.zeros_like(new_thresh)
+new_Ric_bm_l = np.zeros_like(new_thresh)
+new_Ric_bm_h = np.zeros_like(new_thresh)
+
+for i in range(len(new_thresh)):
+    new_Tri_bm_l[i] = new_thresh[i]*(1/tri_low)
+    new_Tri_bm_h[i] = new_thresh[i]*(1/tri_high)
+    new_UCYN_bm_l[i] = new_thresh[i]*(1/UCYN_low)
+    new_UCYN_bm_h[i] = new_thresh[i]*(1/UCYN_high)
+    new_Ric_bm_l[i] = new_thresh[i]*(1/Ric_low)
+    new_Ric_bm_h[i] = new_thresh[i]*(1/Ric_high)
+
+#%% Plot the results
+fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
+ax.plot(new_thresh,new_Tri_cell_l,linewidth=1.0,linestyle='dashed',color='k',label='Tri low')
+ax.plot(new_thresh,new_Tri_cell_h,linewidth=1.0,linestyle='dashed',color='k')#,label='Tri high')
+ax.plot(new_thresh,new_UCYN_cell_l,linewidth=1.0,linestyle='dashed',color='b',label='UCYN low')
+ax.plot(new_thresh,new_UCYN_cell_h,linewidth=1.0,linestyle='dashed',color='b')#,label='UCYN high')
+ax.plot(new_thresh,new_Ric_cell_l,linewidth=1.0,linestyle='dashed',color='g',label='Ric low')
+ax.plot(new_thresh,new_Ric_cell_h,linewidth=1.0,linestyle='dashed',color='g')#,label='Ric high')
+#ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
+#ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+ax.set_ylabel('nifH abundance (copies l$^{-1}$)')
+ax.set_xlabel('biomass (mmol C m$^{-2}$)',labelpad=0.1)
+ax.set_xscale('log')
+ax.set_yscale('log')
+#ax.legend(ncol=3,loc='lower center',bbox_to_anchor=(0.5, -0.55))
+ax.legend(loc='best')#,bbox_to_anchor=(0.5, -0.55))
+#ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
+#ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.show()
 
 #%%############################################################################ 
 ################### Best figure for now #######################################
