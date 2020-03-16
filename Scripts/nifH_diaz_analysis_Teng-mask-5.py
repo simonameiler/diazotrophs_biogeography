@@ -22,7 +22,7 @@ import scipy.interpolate as si
 ###############################################################################
 
 #OJ: can read all grid info from this file
-grid = xr.open_dataset('/Users/meilers/MITinternship/Data/grid.nc')
+grid = xr.open_dataset('/Users/simonameiler/Documents/GitHub/diazotrophs_biogeography/Data/grid.nc')
 
 lon = grid.X   #needed for plotting
 lat = grid.Y    #needed for plotting
@@ -47,7 +47,7 @@ diaz5 = np.zeros((len(months_vec),23,160,360)) #largest diazotroph --> Trichodes
 # Open dataset
 i = 0
 for month in months_vec:
-    diaz = xr.open_dataset('/Users/meilers/MITinternship/Data/run19_33_MONTH/3d.00000'+str(mon_list[month])+'.nc')
+    diaz = xr.open_dataset('/Users/simonameiler/Documents/ETH/Master/Internship/Data/run19_33_MONTH/3d.00000'+str(mon_list[month])+'.nc')
     diaz1[month,:,:,:] = diaz.TRAC30.values[:,:,:,:]
     diaz2[month,:,:,:] = diaz.TRAC31.values[:,:,:,:]
     diaz3[month,:,:,:] = diaz.TRAC32.values[:,:,:,:]
@@ -123,7 +123,7 @@ diaz_SON = np.mean(diaz_mon[8:10,:,:],axis=0)
 ################### Tang and Cassar database ##################################
 ###############################################################################
 
-diazotroph_observations = pd.read_csv(r'/Users/meilers/MITinternship/Data/Tang_and_Cassar-2019/nifH_Gene_Integral_mod.csv')
+diazotroph_observations = pd.read_csv(r'/Users/simonameiler/Documents/GitHub/diazotrophs_biogeography/Data/nifH_Gene_Integral_mod.csv')
 #print(diazotroph_observations)
 
 # Single columns of nifH database in list format
@@ -184,18 +184,18 @@ conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
 
 #%% Reverse biomass to cells per volume
 
-#cells/m3 --> for cells/l just multiply with 1000
-liter = 100
-
-tri_l = 164.4*liter
-tri_h = 0.288*liter
-UCYN_l = 20000*liter
-UCYN_h = 857.14*liter
-Ric_l = 1739.13*liter
-Ric_h = 916.03*liter
-
-conversion_l = [tri_l, UCYN_l, UCYN_l, Ric_l]
-conversion_h = [tri_h, UCYN_h, UCYN_h, Ric_h]
+##cells/m3 --> for cells/l just multiply with 1000
+#liter = 100
+#
+#tri_l = 164.4*liter
+#tri_h = 0.288*liter
+#UCYN_l = 20000*liter
+#UCYN_h = 857.14*liter
+#Ric_l = 1739.13*liter
+#Ric_h = 916.03*liter
+#
+#conversion_l = [tri_l, UCYN_l, UCYN_l, Ric_l]
+#conversion_h = [tri_h, UCYN_h, UCYN_h, Ric_h]
 
 #%% Analyse total biomass from nifH at every point of observation
 
@@ -255,9 +255,9 @@ absence = np.where(nifH_matrix[:,-1] == 0)
 #%% Import lat, lon, and regions file to define ocean basins/regions
 # after Teng et al., 2014
 
-regions = pd.read_csv('/Users/meilers/MITinternship/Data/Regions/regions.csv', header=None).values
-reg_lon = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lons.csv', delimiter=',').astype(int)
-reg_lat = np.loadtxt('/Users/meilers/MITinternship/Data/Regions/lats.csv', delimiter=',').astype(int)
+regions = pd.read_csv('/Users/simonameiler/Documents/ETH/Master/Internship/Data/Regions/regions.csv', header=None).values
+reg_lon = np.loadtxt('/Users/simonameiler/Documents/ETH/Master/Internship/Data/Regions/lons.csv', delimiter=',').astype(int)
+reg_lat = np.loadtxt('/Users/simonameiler/Documents/ETH/Master/Internship/Data/Regions/lats.csv', delimiter=',').astype(int)
 
 # Show mask 
 fig,ax = plt.subplots(figsize=(9,6))
@@ -661,7 +661,8 @@ new_thresh = [0.01,0.1,1.0,5.0]
 
 lon180 = np.mod(np.roll(lon,180)+180, 360) - 180
 
-col = plt.get_cmap('RdBu_r')
+#col = plt.get_cmap('RdBu_r')
+col = plt.get_cmap('viridis')
 #col = cm.cm.haline
 
 fig,ax = plt.subplots(2,2,subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4.5),sharex=True,sharey=True)
@@ -691,14 +692,14 @@ for i in range(0,4):
     ax[i].set_yticks([-60, -30, 0, 30, 60], crs=ccrs.PlateCarree())
     ax[i].text(0.8,0.9,''+(str(new_thresh[i])+''),transform=ax[i].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
     ax[i].text(1.05,0.5,'coincidence: '+(str("{:.2%}".format(COR)+'')),transform=ax[i].transAxes, size=10, rotation=90.,ha="center", va="center")#,bbox=dict(boxstyle="square",facecolor='w'))
-    ax[i].contourf(lon180,lat,mask180,cmap=col,levels=np.linspace(-1,2,21),extend='max')
+    ax[i].contourf(lon180,lat,mask180,cmap=col,extend='max')#levels=np.linspace(-1,2,21),
     ax[i].plot(lon_nifH[presence[0]],lat_nifH[presence[0]],'.',color='r',markersize=4,label='nifH present')#label='Trichodesmium')
-    ax[i].plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='b',markersize=4,label='nifH non-detect')
+    ax[i].plot(lon_nifH[absence[0]],lat_nifH[absence[0]],'x',color='k',markersize=4,label='nifH non-detect')
     ax[1].legend(loc='upper right',ncol=2,bbox_to_anchor=(1, 1.3))
 
 #ax[0].set_title('Seasonal nutrient ratio P:N')
 #cbar.set_label(''+str(name_nut[nu])+'',rotation=90, position=(0.5,0.5))
-#fig.savefig('/Users/meilers/MITinternship/Plots/diaz_Darwin_overview_mask-in-out_var-thresh.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/diaz_Darwin_overview_mask-in-out_var-thresh_newcolor.png', bbox_inches='tight', dpi=300)
 
 #%% Repeat the presence/absence comparison for varying thresholds in Darwin
 plt.rcParams.update({'font.size': 10})
@@ -809,7 +810,7 @@ for i in range(0,4):
 #Fe:N
 
 #new_thresh = np.logspace(1e-5,1e1)#,100) # choose the new ratio for the comparison here
-new_thresh = np.logspace(-5,1)#,100)
+new_thresh = np.logspace(-5,0.5)#,100)
 #new_thresh = [1e-5,1e-4,1e-3,1e-2,1e-1]
 new_pos = np.zeros_like(new_thresh)
 new_abs = np.zeros_like(new_thresh)
@@ -854,7 +855,16 @@ plt.show()
 #%% Plot cell abundance from biomass using varying values for the biomass threshold and calculating the
 # resulting cell abundance back using the conversion factors
 
-new_thresh = np.logspace(-2,1)#,100)
+#%% Get the reverse conversion factors first
+UCYN_l = 20000000000
+UCYN_h = 857142857.1
+tri_l = 164400000
+tri_h = 288000
+Ric_l = 1739130435
+Ric_h = 916030534.4
+
+#%%
+new_thresh = np.logspace(-2,0.5)#,100)
 new_Tri_cell = np.zeros_like(new_thresh)
 new_Tri_cell_l = np.zeros_like(new_thresh)
 new_Tri_cell_h = np.zeros_like(new_thresh)
@@ -873,28 +883,68 @@ for i in range(len(new_thresh)):
 
 #%% Plot the results
 fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
-ax.plot(new_thresh,new_Tri_cell_l,linewidth=1.0,linestyle='dashed',color='k',label='Tri')
-ax.plot(new_thresh,new_Tri_cell_h,linewidth=1.0,linestyle='dashed',color='k')#,label='Tri high')
-ax.plot(new_thresh,new_UCYN_cell_l,linewidth=1.0,linestyle='dashed',color='b',label='UCYN')
-ax.plot(new_thresh,new_UCYN_cell_h,linewidth=1.0,linestyle='dashed',color='b')#,label='UCYN high')
-ax.plot(new_thresh,new_Ric_cell_l,linewidth=1.0,linestyle='dashed',color='g',label='Ric')
-ax.plot(new_thresh,new_Ric_cell_h,linewidth=1.0,linestyle='dashed',color='g')#,label='Ric high')
+ax.plot(new_thresh,new_Tri_cell_l,linewidth=1.0,linestyle='solid',color='k',label='Tri')
+ax.plot(new_thresh,new_Tri_cell_h,linewidth=1.0,linestyle='solid',color='k')#,label='Tri high')
+ax.plot(new_thresh,new_UCYN_cell_l,linewidth=1.0,linestyle='solid',color='b',label='UCYN')
+ax.plot(new_thresh,new_UCYN_cell_h,linewidth=1.0,linestyle='solid',color='b')#,label='UCYN high')
+ax.plot(new_thresh,new_Ric_cell_l,linewidth=1.0,linestyle='solid',color='g',label='Ric')
+ax.plot(new_thresh,new_Ric_cell_h,linewidth=1.0,linestyle='solid',color='g')#,label='Ric high')
 #ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
 #ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
 ax.set_ylabel('cell count (cells l$^{-1}$)')
-ax.set_xlabel('biomass (mmol C m$^{-2}$)',labelpad=0.1)
-ax.set_xscale('log')
-ax.set_yscale('log')
+ax.set_xlabel('biomass (mmol C l$^{-1}$)',labelpad=0.1)
+#ax.set_xscale('log')
+#ax.set_yscale('log')
 #ax.legend(ncol=3,loc='lower center',bbox_to_anchor=(0.5, -0.55))
 ax.legend(loc='best')#,bbox_to_anchor=(0.5, -0.55))
 #ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
 #ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 plt.show()
-#fig.savefig('/Users/meilers/MITinternship/Plots/bm-vs-cells.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm-vs-cells2.png', bbox_inches='tight', dpi=300)
+
+#%% secondary axis for Trichodemsium
+ 
+fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
+#ax.plot(new_thresh,new_Tri_cell_l,linewidth=1.0,linestyle='dashed',color='k',label='Tri')
+#ax.plot(new_thresh,new_Tri_cell_h,linewidth=1.0,linestyle='dashed',color='k')#,label='Tri high')
+lns1 = ax.plot(new_thresh,new_Tri_cell_l,linewidth=2.0,linestyle='solid',color='b',label='Tri')
+ax.plot(new_thresh,new_Tri_cell_h,linewidth=2.0,linestyle='solid',color='b')#,label='UCYN high')
+lns2 = ax.plot(new_thresh,new_Ric_cell_l,linewidth=2.0,linestyle='solid',color='g',label='Ric')
+ax.plot(new_thresh,new_Ric_cell_h,linewidth=2.0,linestyle='solid',color='g')#,label='Ric high')
+ax2 = ax.twinx()
+lns3 = ax2.plot(new_thresh,new_UCYN_cell_l,linewidth=2.0,linestyle='solid',color='k',label='UCYN')
+ax2.plot(new_thresh,new_UCYN_cell_h,linewidth=2.0,linestyle='solid',color='k')#,label='Tri high')
+#ax.axhline(1e-4,linewidth=1.0,linestyle='dashed',color='k')
+#ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
+ax.set_ylabel('cell count Tri, Ric (cells l$^{-1}$)')
+ax2.set_ylabel('cell count UCYN (cells l$^{-1}$)')
+ax.set_xlabel('biomass (mmol C l$^{-1}$)',labelpad=0.1)
+ax.set_ylim([0,7e09])
+ax2.set_ylim([0,7e10])
+#ax.legend(ncol=3,loc='lower center',bbox_to_anchor=(0.5, -0.55))
+
+# added these three lines
+lns = lns1+lns2+lns3
+labs = [l.get_label() for l in lns]
+ax.legend(lns, labs, loc=0)
+
+#ax.legend(loc='best')#,bbox_to_anchor=(0.5, -0.55))
+#ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
+#ax.text(0.85,0.95,'accuracy',transform=ax[1].transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
+plt.show()
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm-vs-cells.png', bbox_inches='tight', dpi=300)
 
 
 #%% Plot cell abundance from biomass using varying values for the biomass threshold and calculating the
 # resulting cell abundance back using the conversion factors
+
+u_l = 72000000000
+u_h = 3085714286
+t_l = 82200000000
+t_h = 28800000
+r_l = 1.73913E+12
+r_h = 91603053435
+
 
 new_thresh = np.logspace(-2,1)#,100)
 new_Tri_bm = np.zeros_like(new_thresh)
@@ -906,12 +956,12 @@ new_Ric_bm_l = np.zeros_like(new_thresh)
 new_Ric_bm_h = np.zeros_like(new_thresh)
 
 for i in range(len(new_thresh)):
-    new_Tri_bm_l[i] = new_thresh[i]*(1/tri_low)
-    new_Tri_bm_h[i] = new_thresh[i]*(1/tri_high)
-    new_UCYN_bm_l[i] = new_thresh[i]*(1/UCYN_low)
-    new_UCYN_bm_h[i] = new_thresh[i]*(1/UCYN_high)
-    new_Ric_bm_l[i] = new_thresh[i]*(1/Ric_low)
-    new_Ric_bm_h[i] = new_thresh[i]*(1/Ric_high)
+    new_Tri_bm_l[i] = new_thresh[i]*t_l
+    new_Tri_bm_h[i] = new_thresh[i]*t_h
+    new_UCYN_bm_l[i] = new_thresh[i]*u_l
+    new_UCYN_bm_h[i] = new_thresh[i]*u_h
+    new_Ric_bm_l[i] = new_thresh[i]*r_l
+    new_Ric_bm_h[i] = new_thresh[i]*r_h
 
 #%% Plot the results
 fig,ax = plt.subplots(1,1,figsize=(4,4),sharey=True)
@@ -925,8 +975,8 @@ ax.plot(new_thresh,new_Ric_cell_h,linewidth=1.0,linestyle='dashed',color='g')#,l
 #ax.axvline(ref_PN,linewidth=1.0,linestyle='dashed',color='w')
 ax.set_ylabel('nifH abundance (copies l$^{-1}$)')
 ax.set_xlabel('biomass (mmol C m$^{-2}$)',labelpad=0.1)
-ax.set_xscale('log')
-ax.set_yscale('log')
+#ax.set_xscale('log')
+#ax.set_yscale('log')
 #ax.legend(ncol=3,loc='lower center',bbox_to_anchor=(0.5, -0.55))
 ax.legend(loc='best')#,bbox_to_anchor=(0.5, -0.55))
 #ax.axvline(1e-1,linewidth=1.0,linestyle='dashed',color='k')
