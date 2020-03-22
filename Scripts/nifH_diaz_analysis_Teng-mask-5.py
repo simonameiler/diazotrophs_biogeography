@@ -214,6 +214,24 @@ for i in range(0,len(mytypes_short)):
 bm_nifH_high_tot = np.nansum(bm_nifH_high,axis=1)
 #bm_nifH_high_tot = bm_nifH_high.sum(1)
 
+
+#%% new approach, mean first
+# Create empty array and fill with values of converted biomass for each species from nifH abundance
+shape = len(nifH),len(mytypes_short)
+bm_nifH = np.zeros(shape) 
+bm_low = np.zeros(shape) 
+bm_high = np.zeros(shape)        
+
+for i in range(0,len(mytypes_short)):
+    bm_nifH[:,i] = nifH[mytypes_short[i]]
+    bm_low[:,i] = bm_nifH[:,i]*conversion_low[i]
+bm_low_tot = np.nansum(bm_low,axis=1)
+
+for i in range(0,len(mytypes_short)):
+    bm_nifH[:,i] = nifH[mytypes_short[i]]
+    bm_high[:,i] = bm_nifH[:,i]*conversion_high[i]
+bm_high_tot = np.nansum(bm_high,axis=1)
+
 #%% Prepare interpolator - Regions from Darwin mask
 
 darwin_lon = np.mod(lon, 360.)
@@ -336,12 +354,12 @@ plt.show()
 
 def statsfun(x, label):
     stats = {
-        'med': x.median(),
-        'q1': x.min(),
-        'q3': x.max(),
-        'whislo': x.min(),
-        'whishi': x.max(),
-        'mean': x.mean(),
+        'med': x.sum(),
+        'q1': x.sum(),
+        'q3': x.sum(),
+        'whislo': x.sum(),
+        'whishi': x.sum(),
+        'mean': np.nansum(x),
         'label': label,
         }
     return stats
@@ -369,7 +387,7 @@ specs_labels = ['Tri.', 'UCYN_A', 'UCYN_B', 'Richelia']
 region_labels = ['','NAtlGyre', 'EqAtl', 'SAtlGyre', 'SO', 'SInd', 'NInd', 'SPacGyre', 'EqPac', 'NPacGyre', 'NPac','Arctic','NAtl']
 #set axes limits
 ymin = 1e-01
-ymax = 1.3e05
+ymax = 2e05
 
 medianprops = dict(linestyle='-.', linewidth=0, color='k')
 meanprops_Tri = dict(marker='D', markeredgecolor='black', markerfacecolor='#621055')
@@ -400,11 +418,13 @@ for i in regs:
         nif_B = nifH[mytypes_short[2]][nifH_reg==i]
         nif_Ric = nifH[mytypes_short[3]][nifH_reg==i]
         nif_tot = nifH_sum[nifH_reg==i]
+        #nif_tot = np.nansum(nifH[mytypes_short[:]][nifH_reg==i], axis=(0,1))
+        nif_tot = np.nanmean(nifH[mytypes_short[:]][nifH_reg==i], axis=(0))
         nif_Tri_stats = statsfun2(nif_Tri,'')
         nif_A_stats = statsfun2(nif_A,'')
         nif_B_stats = statsfun2(nif_B,str(region_labels[i]))
         nif_Ric_stats = statsfun2(nif_Ric,'')
-        nif_tot_stats = statsfun2(nif_tot,'')
+        nif_tot_stats = statsfun(nif_tot,'')
 
         c0 = ax.bxp([nif_Tri_stats], positions=[pos-0.6], showmeans=True, meanprops=meanprops_Tri, medianprops=medianprops, showfliers=False, meanline=False)
         c1 = ax.bxp([nif_A_stats], positions=[pos-0.45], showmeans=True, meanprops=meanprops_A, medianprops=medianprops, showfliers=False, meanline=False)
@@ -422,7 +442,7 @@ plt.suptitle('a)',x=0.06,y=0.95,fontsize=12,weight='bold')
     
 means = [c['means'][0] for c in [c0,c1,c2,c3,c4]]
 ax.legend(means, 'Tri A B Ric tot'.split(),loc='center right', bbox_to_anchor=(1.12, 0.5))
-#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/mean_nifH_abundance_species-specific.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/mean_nifH_abundance_species-specific_2.png', bbox_inches='tight', dpi=300)
         
 
 #%% Now plot the deducted biomass
@@ -565,6 +585,69 @@ plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
 
 #fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH.png', bbox_inches='tight', dpi=300)
 
+#%% other idea
+
+def statsfun4(x, label):
+    stats = {
+        'med': np.median(x),
+        'q1': x.mean(),
+        'q3': x.mean(),
+        'whislo': np.percentile(x, 10.),
+        'whishi': np.percentile(x, 90.),
+        'mean': x.mean(),
+        'label': label,
+        }
+    return stats
+
+m_darwin = diaz_int[j_nifH,i_nifH]
+
+boxprops_bm = dict(edgecolor='w', facecolor='w')
+boxprops_darwin = dict(edgecolor='black', facecolor='lightblue')
+meanprops_bm = dict(marker='D', markeredgecolor='black', markerfacecolor='green')
+meanprops_dar = dict(marker='D', markeredgecolor='black', markerfacecolor='blue')
+medianprops_dar = dict(marker='*', markeredgecolor='red', markerfacecolor='red')
+bxpkw2 = dict(showfliers=False, showmeans=True, meanprops=meanprops_bm, medianprops=medianprops, patch_artist=True)
+bxpkw2dar = dict(showfliers=False, showmeans=True, meanprops=meanprops_dar, medianprops=medianprops, patch_artist=True)
+
+ymin = 1e-04
+ymax = 1e04
+
+fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
+bxpstats = []
+ax.set_ylabel('biomass (mmol C m-2)')
+ax.set_title('biomass from nifH abundance and Darwin')
+ax.set_yscale('log')
+ax.set_ylim([ymin,ymax])
+#ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+#               alpha=0.5)
+ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
+               alpha=0.5)
+ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
+
+pos = 0
+for i in regs:
+    if np.sum(nifH_reg==i) > 0:
+        mean_bm_low = bm_low_tot[nifH_reg==i]
+        mean_bm_high =  bm_high_tot[nifH_reg==i]
+        mean_bm_darwin = bm_darwin[nifH_reg==i]
+        mean_bm_l = statsfun3(mean_bm_low,str(region_labels[i]))
+        mean_bm_h = statsfun2(mean_bm_high,'')
+        bm_darwin_stats = statsfun4(mean_bm_darwin,'')
+        bm0 = ax.bxp([mean_bm_l], positions=[pos-0.1], boxprops=boxprops_bm, **bxpkw2)
+        bm1 = ax.bxp([mean_bm_h], positions=[pos-0.1], boxprops=boxprops_bm, **bxpkw2)
+        bm2 = ax.bxp([bm_darwin_stats], positions=[pos+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
+        if pos < 10:
+            ax.axvline(pos+0.5, color='k', ls='dashed',linewidth=1)
+        ax.annotate(str(np.sum(nifH_reg==i)), (pos+.2,2*1e03), va='baseline', ha='center', xycoords='data')
+        pos += 1
+
+ax.set_xlim(-1+.5, pos-1+.5) 
+means = [c['means'][0] for c in [bm0,bm2]]
+ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 0.5))
+
+plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
+
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH_new.png', bbox_inches='tight', dpi=300)
 
 #%% Presence/absence on monthly time scales
 # find a way to display the data on monthly scales
@@ -982,8 +1065,8 @@ ax2 = ax.twinx()
 lns3 = ax2.plot(new_thresh,new_Tri_cell_m,linewidth=1.5,linestyle='solid',color='blue',label='Tri')
 ax2.plot(new_thresh,new_Tri_cell_l,linewidth=1,linestyle='dashed',color='blue')
 ax2.plot(new_thresh,new_Tri_cell_h,linewidth=1,linestyle='dashed',color='blue')#,label='Tri high')
-ax.set_ylabel('nifH abundance UCYN, Ric (copies l$^{-1}$)')
-ax2.set_ylabel('nifH abundance Tri (copies l$^{-1}$)')
+ax.set_ylabel('cell count UCYN, Ric (cells l$^{-1}$)')
+ax2.set_ylabel('cell count Tri (cells l$^{-1}$)')
 ax.set_xlabel('biomass (mmol C l$^{-1}$)',labelpad=0.1)
 ax.set_ylim([0,6.5e10])
 ax2.set_ylim([0,6.5e08])
@@ -996,7 +1079,7 @@ ax.legend(lns, labs, loc=0)
 plt.suptitle('a)',x=0.01,y=1.0,fontsize=12,weight='bold')
 
 plt.show()
-#ßfig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm-vs-cell.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm-vs-cell.png', bbox_inches='tight', dpi=300)
 
 #%% Plot cell abundance from biomass using varying values for the biomass threshold and calculating the
 # resulting cell abundance back using the conversion factors
