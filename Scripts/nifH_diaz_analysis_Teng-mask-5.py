@@ -530,6 +530,8 @@ def statsfun4(x, label):
         'med': np.median(x),
         'q1': x.mean(),
         'q3': x.mean(),
+        #'whislo': x.std(),
+        #'whishi': x.std(),
         'whislo': np.percentile(x, 10.),
         'whishi': np.percentile(x, 90.),
         'mean': x.mean(),
@@ -587,18 +589,6 @@ plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
 
 #%% other idea
 
-def statsfun4(x, label):
-    stats = {
-        'med': np.median(x),
-        'q1': x.mean(),
-        'q3': x.mean(),
-        'whislo': np.percentile(x, 10.),
-        'whishi': np.percentile(x, 90.),
-        'mean': x.mean(),
-        'label': label,
-        }
-    return stats
-
 m_darwin = diaz_int[j_nifH,i_nifH]
 
 boxprops_bm = dict(edgecolor='w', facecolor='w')
@@ -630,7 +620,7 @@ for i in regs:
         mean_bm_low = bm_low_tot[nifH_reg==i]
         mean_bm_high =  bm_high_tot[nifH_reg==i]
         mean_bm_darwin = bm_darwin[nifH_reg==i]
-        mean_bm_l = statsfun3(mean_bm_low,str(region_labels[i]))
+        mean_bm_l = statsfun2(mean_bm_low,str(region_labels[i]))
         mean_bm_h = statsfun2(mean_bm_high,'')
         bm_darwin_stats = statsfun4(mean_bm_darwin,'')
         bm0 = ax.bxp([mean_bm_l], positions=[pos-0.1], boxprops=boxprops_bm, **bxpkw2)
@@ -643,6 +633,56 @@ for i in regs:
 
 ax.set_xlim(-1+.5, pos-1+.5) 
 means = [c['means'][0] for c in [bm0,bm2]]
+ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 0.5))
+
+plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
+
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH_new.png', bbox_inches='tight', dpi=300)
+
+    #%% other idea
+
+m_darwin = diaz_int[j_nifH,i_nifH]
+
+boxprops_bm = dict(edgecolor='w', facecolor='w')
+boxprops_darwin = dict(edgecolor='black', facecolor='lightblue')
+meanprops_m = dict(marker='o', markersize=5,markeredgecolor='lightgreen', markerfacecolor='lightgreen')
+meanprops_dar = dict(marker='D',markersize=5, alpha=0.5, markeredgecolor='blue', markerfacecolor='blue')
+bxpkw3 = dict(showfliers=False, showmeans=True, meanprops=meanprops_m, medianprops=medianprops, patch_artist=True)
+bxpkw2dar = dict(showfliers=False, showmeans=True, meanprops=meanprops_dar, medianprops=medianprops, patch_artist=True)
+
+ymin = 1e-04
+ymax = 1e04
+
+fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
+bxpstats = []
+ax.set_ylabel('biomass (mmol C m-2)')
+ax.set_title('biomass from nifH abundance and Darwin')
+ax.set_yscale('log')
+ax.set_ylim([ymin,ymax])
+#ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+#               alpha=0.5)
+ax.yaxis.grid(True, linestyle='-', which='major', color='grey',
+               alpha=0.5)
+ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
+
+pos = 0
+for i in regs:
+    if np.sum(nifH_reg==i) > 0:
+        mean_bm_low = np.mean(bm_low_tot[nifH_reg==i])
+        mean_bm_high =  np.mean(bm_high_tot[nifH_reg==i])
+        mean_bm_darwin = bm_darwin[nifH_reg==i]
+        mean_bm_mean = np.append(mean_bm_low, mean_bm_high)
+        mean_bm_m = statsfun3(mean_bm_mean,str(region_labels[i]))
+        bm_darwin_stats = statsfun4(mean_bm_darwin,'')
+        bm0 = ax.bxp([mean_bm_m], positions=[pos-0.1], boxprops=boxprops_tot, **bxpkw3)
+        bm1 = ax.bxp([bm_darwin_stats], positions=[pos+0.1], boxprops=boxprops_darwin, **bxpkw2dar)
+        if pos < 10:
+            ax.axvline(pos+0.5, color='k', ls='dashed',linewidth=1)
+        ax.annotate(str(np.sum(nifH_reg==i)), (pos+.2,2*1e03), va='baseline', ha='center', xycoords='data')
+        pos += 1
+
+ax.set_xlim(-1+.5, pos-1+.5) 
+means = [c['means'][0] for c in [bm0,bm1]]
 ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 0.5))
 
 plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
