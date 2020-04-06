@@ -176,11 +176,13 @@ tri_low = 1.2165e-05
 tri_high = 3.4722e-02
 UCYN_low = 1.3888e-05
 UCYN_high = 3.2407e-04
+UCYNA_low = 6.59235e-07
+UCYNA_high = 3.89626E-03
 Ric_low = 5.75e-07
 Ric_high = 1.0916e-05
 
-conversion_low = [tri_low, UCYN_low, UCYN_low, Ric_low]
-conversion_high = [tri_high, UCYN_high, UCYN_high, Ric_high]
+conversion_low = [tri_low, UCYNA_low, UCYN_low, Ric_low]
+conversion_high = [tri_high, UCYNA_high, UCYN_high, Ric_high]
 
 #%% Reverse biomass to cells per volume
 
@@ -399,8 +401,8 @@ meanprops_tot = dict(marker='D', markeredgecolor='black', markerfacecolor='green
 
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
-ax.set_ylabel('nifH Gene (x10$^{6}$ copies m$^{-2}$)')
-ax.set_title('mean nifH abundance')
+ax.set_ylabel('$\it{nifH}$ Gene (x10$^{6}$ copies m$^{-2}$)')
+ax.set_title('mean $\it{nifH}$ abundance')
 ax.set_yscale('log')
 #ax.set_xlim(right=0) 
 ax.set_ylim([ymin,ymax])
@@ -479,7 +481,7 @@ bxpkw = dict(showfliers=False, showmeans=False, medianprops=medianprops, patch_a
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
 ax.set_ylabel('biomass (mmol C m-2)')
-ax.set_title('potential biomass range from mean nifH abundance')
+ax.set_title('potential biomass range from mean $\it{nifH}$ abundance')
 ax.set_yscale('log')
 ax.set_ylim([ymin,ymax])
 ax.tick_params(axis='x', bottom=False, pad=0, labelrotation=45)
@@ -518,7 +520,7 @@ ax.legend(means, 'Tri A B Ric'.split(),loc='center right', bbox_to_anchor=(1.12,
 
 plt.suptitle('b)',x=0.06,y=0.95,fontsize=12,weight='bold')
   
-#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/mean_bm-from-nifH_species-specific.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/mean_bm-from-nifH_species-specific_newUCYNA.png', bbox_inches='tight', dpi=300)
 
 # SM Note on results: I don't think it makes much sense to compare the mean biomass from Darwin to the biomass from nifH abundance for the 
         # different species here. Maybe first calculate a aggregate biomass estimate from nifH and then compare it to Darwin?
@@ -585,7 +587,7 @@ ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 
 
 plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
 
-#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH_newUCYNA.png', bbox_inches='tight', dpi=300)
 
 #%% other idea
 
@@ -656,7 +658,7 @@ ymax = 1e04
 fig,ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3))
 bxpstats = []
 ax.set_ylabel('biomass (mmol C m-2)')
-ax.set_title('biomass from nifH abundance and Darwin')
+ax.set_title('biomass from $\it{nifH}$ abundance and Darwin')
 ax.set_yscale('log')
 ax.set_ylim([ymin,ymax])
 #ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey',
@@ -687,7 +689,7 @@ ax.legend(means, 'nifH model'.split(),loc='center right', bbox_to_anchor=(1.15, 
 
 plt.suptitle('c)',x=0.06,y=0.95,fontsize=12,weight='bold')
 
-#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH_new.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/bm_darwin_nifH_newUCYNA.png', bbox_inches='tight', dpi=300)
 
 #%% Presence/absence on monthly time scales
 # find a way to display the data on monthly scales
@@ -1285,6 +1287,10 @@ from matplotlib.colors import LogNorm
 
 reg_darwin180 = np.roll(reg_darwin, 180, 1)
 
+#clean = [x for x in nifH[mytypes_short[3]][nifH_reg==9] if ~np.isnan(x)]
+test = nifH[mytypes_short[3]][nifH_reg==9]
+#cleanindex = np.argwhere(~np.isnan(nifH[mytypes_short[3]][nifH_reg==9]))
+
 fig,ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree(central_longitude=0)},figsize=(9,4))
 lon_formatter = LongitudeFormatter(zero_direction_label=True)
 lat_formatter = LatitudeFormatter()
@@ -1297,14 +1303,16 @@ ax.set_yticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], crs=ccrs.PlateCarree())
 #ax.text(0.2,0.9,''+(str(depth_lab[1])+''),transform=ax.transAxes, size=10, rotation=0.,ha="center", va="center",bbox=dict(boxstyle="round",facecolor='w'))
 c0 = ax.contourf(lon180,lat,reg_darwin180,levels=np.linspace(0,12,13),cmap=cm.cm.gray,extend='max',alpha=0.7)
 c1 = ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum,norm=plt.Normalize(0,10000),cmap=col)
-#c1 = ax.scatter(lon_nifH,lat_nifH,s=10,c=nifH_sum,norm=LogNorm(),cmap=col)
+#c1 = ax.scatter(lon_nifH[nifH_reg==9][test.notna()],lat_nifH[nifH_reg==9][test.notna()],s=10,c=nifH[mytypes_short[3]][nifH_reg==9][test.notna()],norm=plt.Normalize(0,10000),cmap=col)
 #ax.legend(loc='best')
 fig.subplots_adjust(wspace=0.07,hspace=0.07,right=0.85)
 cbar_ax = fig.add_axes([0.87, 0.12, 0.02, 0.75])
 cbar = fig.colorbar(c1, cax=cbar_ax)
 cbar.set_label('nifH gene abundance (x10$^{6}$ copies m$^{-2}$)',rotation=90, position=(0.5,0.5))
 plt.suptitle('b)',x=0.09,y=0.9,fontsize=12,weight='bold')
+#plt.suptitle('UCYN-B in the NPacGyre')
 #fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/diaz_Darwin_overview_nifH_regions.png', bbox_inches='tight', dpi=300)
+#fig.savefig('/Users/simonameiler/Documents/ETH/Master/Internship/Plots/B_NPacGyre.png', bbox_inches='tight', dpi=300)
 
 
 #%% 
