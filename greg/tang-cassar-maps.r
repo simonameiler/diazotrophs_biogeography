@@ -45,12 +45,12 @@ ubrng  <- apply(ub,c(1,2),function(x) diff(range(x)))
 zlims=c(0,10)
 pdf('d:/dropbox/working/diazotrophs/plots/nifh_maps.pdf',height=6,width=9)
 par(mfrow=c(2,2),mar=c(2,2,2,5))
-image(x=lon,y=lat,t(log10(rmean+1))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+image(x=lon,y=lat,t(log10(rmean))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('Richelia')
-image(x=lon,y=lat,t(log10(tmean+1))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+image(x=lon,y=lat,t(log10(tmean))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
@@ -60,11 +60,57 @@ image(x=lon,y=lat,t(log10(uamean))[,90:1],xlab='',ylab='',col=viridis(20),zlim=z
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('UCYN-A')
-image(x=lon,y=lat,t(log10(ubmean+1))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+image(x=lon,y=lat,t(log10(ubmean))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('UCYN-B')
+dev.off()
+
+##--SEASONAL--#######################
+zlims=c(0,10)
+pdf('d:/dropbox/working/diazotrophs/plots/nifh_seasonal_richelia.pdf',height=8,width=10)
+par(mfrow=c(4,3),mar=c(2,2,2,3),oma=c(1,1,2,1))
+for(i in 1:12){
+image(x=lon,y=lat,t(log10(r[,,i]))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	if(i==3) image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext(month.name[i])
+}; mtext('Richelia',outer=TRUE,side=3)
+dev.off()
+
+pdf('d:/dropbox/working/diazotrophs/plots/nifh_seasonal_trichodesmium.pdf',height=8,width=10)
+par(mfrow=c(4,3),mar=c(2,2,2,3),oma=c(1,1,2,1))
+for(i in 1:12){
+image(x=lon,y=lat,t(log10(t[,,i]))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	if(i==3) image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext(month.name[i])
+}; mtext('Trichodesmium',outer=TRUE,side=3)
+dev.off()
+
+pdf('d:/dropbox/working/diazotrophs/plots/nifh_seasonal_ucyna.pdf',height=8,width=10)
+par(mfrow=c(4,3),mar=c(2,2,2,3),oma=c(1,1,2,1))
+for(i in 1:12){
+image(x=lon,y=lat,t(log10(ua[,,i]))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	if(i==3) image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext(month.name[i])
+}; mtext('UCYN-A',outer=TRUE,side=3)
+dev.off()
+
+pdf('d:/dropbox/working/diazotrophs/plots/nifh_seasonal_ucynb.pdf',height=8,width=10)
+par(mfrow=c(4,3),mar=c(2,2,2,3),oma=c(1,1,2,1))
+for(i in 1:12){
+image(x=lon,y=lat,t(log10(ub[,,i]))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	if(i==3) image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext(month.name[i])
+}; mtext('UCYN-B',outer=TRUE,side=3)
 dev.off()
 
 # par(mfrow=c(2,2),mar=c(2,2,2,5))
@@ -92,12 +138,12 @@ dev.off()
 ##--PLOT nifH RANGE--######################
 zlims <- c(0,10)
 par(mfrow=c(2,2),mar=c(2,2,2,5))
-image(x=lon,y=lat,t(log10(rrng+1))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+image(x=lon,y=lat,t(log10(rrng))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('Richelia')
-image(x=lon,y=lat,t(log10(trng+1))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
+image(x=lon,y=lat,t(log10(trng))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
@@ -107,7 +153,7 @@ image(x=lon,y=lat,t(log10(uarng))[,90:1],xlab='',ylab='',col=viridis(20),zlim=c(
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('UCYN-A')
-image(x=lon,y=lat,t(log10(ubrng+1))[,90:1],xlab='',ylab='',col=viridis(20),zlim=c(0,10)); 
+image(x=lon,y=lat,t(log10(ubrng))[,90:1],xlab='',ylab='',col=viridis(20),zlim=c(0,10)); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
@@ -126,6 +172,11 @@ Rcen <- rmean*rcen
 Tcen <- tmean*tcen
 UAcen <- uamean*uacen
 UBcen <- ubmean*ubcen
+
+Rlow <- rlw*rmean; Rhigh <- rup*rmean
+Tlow <- tlw*tmean; Thigh <- tup*tmean
+UAlow <- ualw*uamean; UAhigh <- uaup*uamean
+UBlow <- ublw*ubmean; UBhigh <- ubup*ubmean
 
 Rrng  <- (rup*rmean - rlw*rmean)
 Trng  <- (tup*tmean - tlw*tmean)
@@ -155,12 +206,12 @@ image(x=lon,y=lat,t(log10(ubmean*ubcen))[,90:1],xlab='',ylab='',col=viridis(20),
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
-	mtext('Trichodesmium')
+	mtext('UCYN-B')
 dev.off()
 
 
 ##--PLOT RANGE--######################
-zlims <- c(-10,2)
+zlims <- c(-11,3)
 pdf('d:/dropbox/working/diazotrophs/plots/biomass_range_maps.pdf',height=6,width=9)
 par(mfrow=c(2,2),mar=c(2,2,2,5))
 image(x=lon,y=lat,t(log10(Rrng))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
@@ -182,9 +233,59 @@ image(x=lon,y=lat,t(log10(UBrng))[,90:1],xlab='',ylab='',col=viridis(20), zlim=z
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
-	mtext('Trichodesmium')
+	mtext('UCYN-B')
 dev.off()
 
+
+zlims <- c(-12,3)
+pdf('d:/dropbox/working/diazotrophs/plots/biomass_up_maps.pdf',height=6,width=9)
+par(mfrow=c(2,2),mar=c(2,2,2,5))
+image(x=lon,y=lat,t(log10(Rhigh))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('Richelia')
+image(x=lon,y=lat,t(log10(Thigh))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('Trichodesmium')
+image(x=lon,y=lat,t(log10(UAhigh))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('UCYN-A')
+image(x=lon,y=lat,t(log10(UBhigh))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('UCYN-B')
+dev.off()
+
+zlims <- c(-12,3)
+pdf('d:/dropbox/working/diazotrophs/plots/biomass_low_maps.pdf',height=6,width=9)
+par(mfrow=c(2,2),mar=c(2,2,2,5))
+image(x=lon,y=lat,t(log10(Rlow))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('Richelia')
+image(x=lon,y=lat,t(log10(Tlow))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('Trichodesmium')
+image(x=lon,y=lat,t(log10(UAlow))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('UCYN-A')
+image(x=lon,y=lat,t(log10(UBlow))[,90:1],xlab='',ylab='',col=viridis(20), zlim=zlims); 
+	box()
+	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+	mtext('UCYN-B')
+dev.off()
 ####################################################
 ## TWO COLUMN ######################################
 ####################################################
