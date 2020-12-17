@@ -19,10 +19,10 @@ ua <- D$UCYNA.RF.global.monthly
 ub <- D$UCYNB.RF.global.monthly
 tot <- r + t + ua + ub
 
-#r[r=='1'] <- 0    #set 1s to true zeros
-#t[t=='1'] <- 0
-#ua[ua=='1'] <- 0
-#ub[ub=='1'] <- 0
+r[r=='1'] <- 0    #set 1s to true zeros
+t[t=='1'] <- 0
+ua[ua=='1'] <- 0
+ub[ub=='1'] <- 0
 
 lon <- seq(-180,180,length.out=180)
 lat <- seq(-90,90,length.out=90)
@@ -149,8 +149,8 @@ ubcelltot <- ub*(1/ucynb_nifcell)
 ## PLOT MEAN CELL ABUNDANCE BY SPECIES #####################
 ############################################################
 zlims=c(-3,9) 
-pdf('d:/dropbox/working/diazotrophs/plots/mean_cell.pdf',height=5,width=8)
-par(mfrow=c(2,2),mar=c(2,2,2,5))
+pdf('d:/dropbox/working/diazotrophs/plots/mean_cell_12_01_2020.pdf',height=5,width=8.5)
+par(mfrow=c(2,2),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2))
 image(x=lon,y=lat,t(log10(rmean*(1/r_nifcell)))[,90:1],xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
@@ -170,6 +170,7 @@ image(x=lon,y=lat,t(log10(ubmean*(1/ucynb_nifcell)))[,90:1],xlab='',ylab='',col=
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('UCYN-B')
+	mtext(outer=TRUE,'Cell Abundance')
 dev.off()
 
 ############################################################
@@ -181,8 +182,8 @@ uaC <- uacell*ucyna_Ccell
 ubC <- ubcell*ucynb_Ccell
 
 zlims=c(-10,2) 
-pdf('d:/dropbox/working/diazotrophs/plots/mean_carbon.pdf',height=5,width=8)
-par(mfrow=c(2,2),mar=c(2,2,2,5))
+pdf('d:/dropbox/working/diazotrophs/plots/mean_carbon_12_01_2020.pdf',height=5,width=8.5)
+par(mfrow=c(2,2),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2))
 image(x=lon,y=lat,log10(rC),xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
@@ -202,7 +203,14 @@ image(x=lon,y=lat,log10(ubC),xlab='',ylab='',col=viridis(20),zlim=zlims);
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
 	mtext('UCYN-B')
+	mtext(outer=TRUE,'Carbon')
 dev.off()
+
+
+
+
+
+
 
 ###############################################################
 ## TOTAL CELL + CARBON ABUNDANCE ##############################
@@ -229,11 +237,44 @@ C_l_l <- rcell_h*r_Ccell_l + tcell_h*t_Ccell_l + uacell_h*ucyna_Ccell_l + ubcell
 C_h_h <- rcell_l*r_Ccell_h + tcell_l*t_Ccell_h + uacell_l*ucyna_Ccell_h + ubcell_l*ucynb_Ccell_h
 
 
+#######################################################################
+## LATITUDINAL PLOTS ##################################################
+#######################################################################
+
+pdf('d:/dropbox/working/diazotrophs/plots/latitudinal.pdf',height=4,width=7)
+lats <- seq(-90,90,length.out=90)
+ylims=c(-10,0)
+par(mfrow=c(2,2),mar=c(1,1,2,2),oma=c(3,3,2,2))
+plot(lats,colMeans(log10(rC),na.rm=TRUE),type='l',ylim=ylims)
+	lines(lats,colMeans(log10(rcell_h*r_Ccell_l),na.rm=TRUE),lty=2)
+	lines(lats,colMeans(log10(rcell_l*r_Ccell_h),na.rm=TRUE),lty=2)
+	mtext('Richelia')
+	
+plot(lats,colMeans(log10(tC),na.rm=TRUE),type='l',ylim=ylims)
+	lines(lats,colMeans(log10(tcell_h*t_Ccell_l),na.rm=TRUE),type='l',lty=2)
+	lines(lats,colMeans(log10(tcell_l*t_Ccell_h)+0.1,na.rm=TRUE),type='l',lty=2)
+	mtext('Trichodesmium')
+
+plot(lats,colMeans(log10(uaC),na.rm=TRUE),type='l',ylim=ylims)
+	lines(lats,colMeans(log10(uacell_h*ucyna_Ccell_l),na.rm=TRUE),type='l',lty=2)
+	lines(lats,colMeans(log10(uacell_l*ucyna_Ccell_h)-0.2,na.rm=TRUE),type='l',lty=2)
+	mtext('UCYN-A')
+
+plot(colMeans(log10(ubC),na.rm=TRUE),type='l',ylim=ylims)
+	lines(colMeans(log10(ubcell_h*ucynb_Ccell_l),na.rm=TRUE),type='l',lty=2)
+	lines(colMeans(log10(ubcell_l*ucynb_Ccell_h)+0.8,na.rm=TRUE),type='l',lty=2)
+	mtext('UCYN-B')
+mtext(side=1,outer=TRUE,'Latitude',line=1)
+mtext(side=2,outer=TRUE,expression('log10(Carbon Concentration [mgC/m'^3*']'),line=1)
+mtext(outer=TRUE,'Carbon')
+dev.off()
+
+
 ##################################################################
 ##--TOTAL CELL AND TOTAL CARBON 2 x 3 PANEL ######################
 ##################################################################
 zlims=c(-0,10)
-pdf('d:/dropbox/working/diazotrophs/plots/total_cell_total_carbon_2x3.pdf',height=5,width=10)
+pdf('d:/dropbox/working/diazotrophs/plots/total_cell_total_carbon_2x3_12_01_2020.pdf',height=5,width=12)
 par(mfrow=c(2,3),mar=c(2,2,2,5))
 image(x=lon,y=lat,log10(cell),xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
@@ -253,7 +294,7 @@ image(x=lon,y=lat,log10(cell_l-cell_h),xlab='',ylab='',col=viridis(20),zlim=zlim
 
 plot(-999,type='n',xaxt='n',yaxt='n',bty='n')
 
-zlims=c(-8,2)
+zlims=c(-9,2)
 image(x=lon,y=lat,log10(C),xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
