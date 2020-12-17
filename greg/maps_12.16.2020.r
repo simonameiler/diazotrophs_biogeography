@@ -70,8 +70,8 @@ ucynb_Ccell_h <- 1.16E-9
 ucynb_Ccell_l <- 5E-11
 ucynb_Ccell   <- mean(ucynb_Ccell_h,ucynb_Ccell_l)
 
-r_Ccell_h <- 8.16E-7
-r_Ccell_l <- 1.52E-9
+r_Ccell_h <- 1.09E-9
+r_Ccell_l <- 5.75E-10
 r_Ccell   <- mean(r_Ccell_h,r_Ccell_l)
 
 ###########################################################################
@@ -116,7 +116,7 @@ Ctot <- rC + tC + uaC + ubC
 
 
 zlims=c(0,1) 
-pdf('d:/dropbox/working/diazotrophs/plots/mean_cell_12_16_2020.pdf',height=9,width=8.5)
+pdf('d:/dropbox/working/diazotrophs/plots/mean_cell_12_17_2020.pdf',height=9,width=8.5)
 par(mfrow=c(4,2),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2))
 image(x=lon,y=lat,cellr/celltot ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
 	box()
