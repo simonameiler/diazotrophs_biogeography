@@ -104,8 +104,20 @@ cellr  <- t(rmean*(1/r_nifcell))[,90:1]
 cellt  <- t(tmean*(1/t_nifcell))[,90:1]
 cellua <- t(uamean*(1/ucyna_nifcell))[,90:1]
 cellub <- t(ubmean*(1/ucynb_nifcell))[,90:1]
+  celltot <- cellr + cellt + cellua + cellub
 
-celltot <- cellr + cellt + cellua + cellub
+cellr_l  <- t(rmean*(1/r_nifcell_l))[,90:1]
+cellt_l  <- t(tmean*(1/t_nifcell_l))[,90:1]
+cellua_l <- t(uamean*(1/ucyna_nifcell_l))[,90:1]
+cellub_l <- t(ubmean*(1/ucynb_nifcell_l))[,90:1]
+  celltot_l <- cellr_l + cellt_l + cellua_l + cellub_l
+
+cellr_h  <- t(rmean*(1/r_nifcell_h))[,90:1]
+cellt_h  <- t(tmean*(1/t_nifcell_h))[,90:1]
+cellua_h <- t(uamean*(1/ucyna_nifcell_h))[,90:1]
+cellub_h <- t(ubmean*(1/ucynb_nifcell_h))[,90:1]
+  celltot_h <- cellr_h + cellt_h + cellua_h + cellub_h
+
 
 rC  <- rcell*r_Ccell
 tC  <- tcell*t_Ccell
@@ -114,6 +126,91 @@ ubC <- ubcell*ucynb_Ccell
 
 Ctot <- rC + tC + uaC + ubC
 
+rC_l  <- rcell_l*r_Ccell_l
+tC_l  <- tcell_l*t_Ccell_l
+uaC_l <- uacell_l*ucyna_Ccell_l
+ubC_l <- ubcell_l*ucynb_Ccell_l
+
+Ctot_l <- rC_l + tC_l + uaC_l + ubC_l
+
+rC_h  <- rcell_h*r_Ccell_h
+tC_h  <- tcell_h*t_Ccell_h
+uaC_h <- uacell_h*ucyna_Ccell_h
+ubC_h <- ubcell_h*ucynb_Ccell_h
+
+Ctot_h <- rC_h + tC_h + uaC_h + ubC_h
+
+zlims=c(0,1) 
+#pdf('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
+CairoPDF('~/dropbox/working/diazotrophs/plots/proportion_maps_high_low_04_16_2021.pdf',height=9,width=16)
+par(mfrow=c(4,4),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2),xpd=FALSE)
+image(x=lon,y=lat,cellr_l/celltot_l ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+  mtext('a) Richelia',adj=0,line=0.5)
+  mtext('Proportion of Cellular Concentration',line=2,adj=1)
+image(x=lon,y=lat,cellr_h/celltot_h ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,rC_l/Ctot_l,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+#  mtext('Richelia')
+  mtext('Proportion of Carbon Concentration',line=2)
+image(x=lon,y=lat,rC_h/Ctot_h,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+
+image(x=lon,y=lat,cellt_l/celltot_l ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+  mtext('b) Trichodesmium',adj=0,line=0.5)
+image(x=lon,y=lat,cellt_h/celltot_h ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,tC_l/Ctot_l,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,tC_h/Ctot_h,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+
+image(x=lon,y=lat,cellua_l/celltot_l ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+  mtext('c) UCYN-A', adj=0,line=0.5)
+image(x=lon,y=lat,cellua_h/celltot_h ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,uaC_l/Ctot_l,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,uaC_h/Ctot_h,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+
+image(x=lon,y=lat,cellub_l/celltot_l ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+  mtext('d) UCYN-A', adj=0,line=0.5)
+image(x=lon,y=lat,cellub_h/celltot_h ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,ubC_l/Ctot_l,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+image(x=lon,y=lat,ubC_h/Ctot_h,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+  box()
+  map(add=TRUE,fill=TRUE,resolution=1000,col='grey')  
+dev.off()
+
+
+
+
+
+
+###################################
 
 zlims=c(0,1) 
 #pdf('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
