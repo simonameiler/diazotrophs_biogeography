@@ -1,7 +1,8 @@
 
-diaz <- read.csv('~/dropbox/data/diazotrophs/maredat_diazotroph.csv',sep=',')
+#diaz <- read.csv('~/dropbox/data/diazotrophs/maredat_diazotroph.csv',sep=',')
+diaz <- read.csv('~/dropbox/working/DIAZOTROPHS/data/correction_integrated_04_23_2021.csv',sep=',')
 
-refs <- unique(diaz$SOURCE..Data)
+refs <- unique(diaz$ref)
 
 t_nifcell_h <- 500
 t_nifcell_l <- 100
@@ -39,8 +40,15 @@ r_Ccell   <- mean(r_Ccell_h,r_Ccell_l)
 
 
 
+i <- 8
+dd <- diaz[diaz$SOURCE..Data==refs[i],]
+dd <- dd[order(dd$LATITUDE),]
+	plot(dd$LATITUDE, dd$Richelia.nifH.Gene..copies.L.1,type='l',log='y')
+	lines(dd$LATITUDE, dd$UCYN.B.nifH.Gene..copies.L.1.,col='red')
+	lines(dd$LATITUDE, as.numeric(dd$UCYN.A1.nifH.Gene..copies.L.1.),col='blue')
+	lines(dd$LATITUDE,dd$Trichodesmium.nifH.Gene..copies.L.1.,col='dark green')
 
-# for(i in 1:length(refs)){
+	# for(i in 1:length(refs)){
 # 	dd <- diaz[diaz$SOURCE..Data==refs[i],]
 # 	dd <- dd[order(dd$LATITUDE),]
 # 	plot(dd$LATITUDE,dd$Richelia.nifH.Gene..x106.copies.m.2.,type='l',log='y')
@@ -73,13 +81,27 @@ r_Ccell   <- mean(r_Ccell_h,r_Ccell_l)
 # 
 
 
-dd <- diaz[diaz$SOURCE..Data==refs[i],]
-dd <- dd[order(dd$LATITUDE),]
+# dd <- diaz[diaz$SOURCE..Data==refs[31],]
+# dd <- dd[order(dd$LATITUDE),]
+dd <- diaz[diaz$ref==refs[31],]
+dd <- dd[order(dd$lat),]
 
-x1 <- dd$Richelia.nifH.Gene..x106.copies.m.2.+1
-x2 <- dd$UCYN.B.nifH.Gene..x106.copies.m.2.+1
-x3 <- dd$UCYN.A.nifH.Gene..x106.copies.m.2.+1
-x4 <- dd$Trichodesmium.nifH.Gene..x106.copies.m.2.+1
+# x1 <- dd$Richelia.nifH.Gene..x106.copies.m.2.+1
+# x2 <- dd$UCYN.B.nifH.Gene..x106.copies.m.2.+1
+# x3 <- dd$UCYN.A.nifH.Gene..x106.copies.m.2.+1
+# x4 <- dd$Trichodesmium.nifH.Gene..x106.copies.m.2.+1
+
+# x1 <- dd$Richelia.nifH.Gene..copies.L.1.+1
+# x2 <- dd$UCYN.B.nifH.Gene..copies.L.1.+1
+# x3 <- as.numeric(dd$UCYN.A1.nifH.Gene..copies.L.1.) +1
+# x4 <- dd$Trichodesmium.nifH.Gene..copies.L.1.+1
+
+x1 <- dd$richelia+1
+x2 <- dd$ucyn_b+1
+x3 <- dd$ucyn_a+1
+x4 <- dd$trichodesmium+1
+
+
 
 xx1 <- (1/r_nifcell)*x1
 xx2 <- (1/ucynb_nifcell)*x2
@@ -130,29 +152,29 @@ par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE)
 # 		mtext(side=2,expression('log(nifH [copies/m'^2*'])'),line=3)
 
 	plot(-999,ylim=c(1E-3,1E9),log='y',xlim=c(0,20),las=1,ylab='')
-	lines(dd$LATITUDE,xx1_h+xx2_h+xx3_h+xx4_h,lwd=2)
-	lines(dd$LATITUDE,(1/r_nifcell_h)*(dd$Richelia.nifH.Gene..x106.copies.m.2.+1),col='orange',lty=2)
-	lines(dd$LATITUDE,(1/ucynb_nifcell_h)*(dd$UCYN.B.nifH.Gene..x106.copies.m.2.+1),col='red',lty=2)
-	lines(dd$LATITUDE,(1/ucyna_nifcell_h)*(dd$UCYN.A.nifH.Gene..x106.copies.m.2.+1),col='blue',lty=2)
-	lines(dd$LATITUDE,(1/t_nifcell_h)*(dd$Trichodesmium.nifH.Gene..x106.copies.m.2.+1),col='dark green',lty=2)
+	lines(dd$lat,xx1_h+xx2_h+xx3_h+xx4_h,lwd=2)
+	lines(dd$lat,(1/r_nifcell_h)*(dd$richelia+1),col='orange',lty=2)
+	lines(dd$lat,(1/ucynb_nifcell_h)*(dd$ucyn_b+1),col='red',lty=2)
+	lines(dd$lat,(1/ucyna_nifcell_h)*(dd$ucyn_a+1),col='blue',lty=2)
+	lines(dd$lat,(1/t_nifcell_h)*(dd$trichodesmium+1),col='dark green',lty=2)
 		mtext(side=2,expression('log10(cells [cells/m'^2*'])'),line=3.5)
 		legend('topleft',legend=c('Total','Richelia','UCYN A','UCYN B','Trichodesmium'),lty=c(1,2,2,2,2),lwd=c(2,1,1,1,1),
 		       col=c('black','orange','blue','red','dark green'),bty='n',cex=0.7)
 		
 		plot(-999,ylim=c(1E-3,1E9),log='y',xlim=c(0,20),las=1,ylab='')
-		lines(dd$LATITUDE,xx1_l+xx2_l+xx3_l+xx4_l,lwd=2)
-		lines(dd$LATITUDE,(1/r_nifcell_l)*(dd$Richelia.nifH.Gene..x106.copies.m.2.+1),col='orange',lty=2)
-		lines(dd$LATITUDE,(1/ucynb_nifcell_l)*(dd$UCYN.B.nifH.Gene..x106.copies.m.2.+1),col='red',lty=2)
-		lines(dd$LATITUDE,(1/ucyna_nifcell_l)*(dd$UCYN.A.nifH.Gene..x106.copies.m.2.+1),col='blue',lty=2)
-		lines(dd$LATITUDE,(1/t_nifcell_l)*(dd$Trichodesmium.nifH.Gene..x106.copies.m.2.+1),col='dark green',lty=2)
+		lines(dd$lat,xx1_l+xx2_l+xx3_l+xx4_l,lwd=2)
+		lines(dd$lat,(1/r_nifcell_l)*(dd$richelia+1),col='orange',lty=2)
+		lines(dd$lat,(1/ucynb_nifcell_l)*(dd$ucyn_b+1),col='red',lty=2)
+		lines(dd$lat,(1/ucyna_nifcell_l)*(dd$ucyn_a+1),col='blue',lty=2)
+		lines(dd$lat,(1/t_nifcell_l)*(dd$trichodesmium+1),col='dark green',lty=2)
 		
 		
 	plot(-999,ylim=c(1E-13,5E0),log='y',xlim=c(0,20),las=1,ylab='')
-	lines(dd$LATITUDE,xxx1_l+xxx2_l+xxx3_l+xxx4_l,lwd=2)
-	lines(dd$LATITUDE,(1/r_nifcell_h)*(r_Ccell_l)*(dd$Richelia.nifH.Gene..x106.copies.m.2.+1),col='orange',lty=2)
-	lines(dd$LATITUDE,(1/ucynb_nifcell_h)*(ucynb_Ccell_l)*(dd$UCYN.B.nifH.Gene..x106.copies.m.2.+1),col='red',lty=2)
-	lines(dd$LATITUDE,(1/ucyna_nifcell_h)*(ucyna_Ccell_l)*(dd$UCYN.A.nifH.Gene..x106.copies.m.2.+1),col='blue',lty=2)
-	lines(dd$LATITUDE,(1/t_nifcell_h)*(t_Ccell_l)*(dd$Trichodesmium.nifH.Gene..x106.copies.m.2.+1),col='dark green',lty=2)
+	lines(dd$lat,xxx1_l+xxx2_l+xxx3_l+xxx4_l,lwd=2)
+	lines(dd$lat,(1/r_nifcell_h)*(r_Ccell_l)*(dd$richelia+1),col='orange',lty=2)
+	lines(dd$lat,(1/ucynb_nifcell_h)*(ucynb_Ccell_l)*(dd$ucyn_b+1),col='red',lty=2)
+	lines(dd$lat,(1/ucyna_nifcell_h)*(ucyna_Ccell_l)*(dd$ucyn_a+1),col='blue',lty=2)
+	lines(dd$lat,(1/t_nifcell_h)*(t_Ccell_l)*(dd$trichodesmium+1),col='dark green',lty=2)
 		mtext(side=2,expression('log10(carbon [mmol/m'^2*'])'),line=3.5)
 
 
@@ -165,11 +187,11 @@ par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE)
 
 
 plot(-999,ylim=c(1E-13,5E0),log='y',xlim=c(0,20),las=1,ylab='')
-lines(dd$LATITUDE,xxx1_h+xxx2_h+xxx3_h+xxx4_h,lwd=2)
-lines(dd$LATITUDE,(1/r_nifcell_l)*(r_Ccell_h)*(dd$Richelia.nifH.Gene..x106.copies.m.2.+1),col='orange',lty=2)
-lines(dd$LATITUDE,(1/ucynb_nifcell_l)*(ucynb_Ccell_h)*(dd$UCYN.B.nifH.Gene..x106.copies.m.2.+1),col='red',lty=2)
-lines(dd$LATITUDE,(1/ucyna_nifcell_l)*(ucyna_Ccell_h)*(dd$UCYN.A.nifH.Gene..x106.copies.m.2.+1),col='blue',lty=2)
-lines(dd$LATITUDE,(1/t_nifcell_l)*(t_Ccell_h)*(dd$Trichodesmium.nifH.Gene..x106.copies.m.2.+1),col='dark green',lty=2)
+lines(dd$lat,xxx1_h+xxx2_h+xxx3_h+xxx4_h,lwd=2)
+lines(dd$lat,(1/r_nifcell_l)*(r_Ccell_h)*(dd$richelia+1),col='orange',lty=2)
+lines(dd$lat,(1/ucynb_nifcell_l)*(ucynb_Ccell_h)*(dd$ucyn_b+1),col='red',lty=2)
+lines(dd$lat,(1/ucyna_nifcell_l)*(ucyna_Ccell_h)*(dd$ucyn_a+1),col='blue',lty=2)
+lines(dd$lat,(1/t_nifcell_l)*(t_Ccell_h)*(dd$trichodesmium+1),col='dark green',lty=2)
 mtext(side=1,outer=TRUE,expression('Latitude ('*degree*'N)'),line=0.5)
 
 dev.off()
