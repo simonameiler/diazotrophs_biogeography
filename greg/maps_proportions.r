@@ -3,6 +3,7 @@ library(fields)
 library(maps)
 library(mapdata)
 library(viridis)
+library(Cairo)
 data(world2HiresMapEnv)
 data(world2LoresMapEnv)
 
@@ -41,37 +42,37 @@ totrng <- apply(tot,c(1,2),function(x) diff(range(x)))
 #########################################################################
 ## CONVERSIONS ##########################################################
 #########################################################################
-t_nifcell_h <- 500
-t_nifcell_l <- 100
+t_nifcell_h <- 1012.45
+t_nifcell_l <- 2.64
 t_nifcell   <- mean(c(t_nifcell_h,t_nifcell_l))
 
-ucyna_nifcell_h <- 27.91
+ucyna_nifcell_h <- 27.81
 ucyna_nifcell_l <- 0.49
 ucyna_nifcell   <- mean(c(ucyna_nifcell_h,ucyna_nifcell_l))
 
 ucynb_nifcell_h <- 3.6
-ucynb_nifcell_l <- 3.6
+ucynb_nifcell_l <- 1
 ucynb_nifcell   <- mean(c(ucynb_nifcell_h,ucynb_nifcell_l))
 
-r_nifcell_h <- 1000
-r_nifcell_l <- 100
+r_nifcell_h <- 401.56
+r_nifcell_l <- 1.35
 r_nifcell   <- mean(c(r_nifcell_h,r_nifcell_l))
 
 
-t_Ccell_h <- 3.47E-6
-t_Ccell_l <- 6.08E-9
+t_Ccell_h <- 4.75E-8
+t_Ccell_l <- 1.48E-9
 t_Ccell   <- mean(t_Ccell_h,t_Ccell_l) 
 
 ucyna_Ccell_h <- 1.91E-9
-ucyna_Ccell_l <- 1.83E-11
+ucyna_Ccell_l <- 1.86E-11
 ucyna_Ccell   <- mean(ucyna_Ccell_h,ucyna_Ccell_l)
 
-ucynb_Ccell_h <- 1.16E-9
+ucynb_Ccell_h <- 1.17E-9
 ucynb_Ccell_l <- 5E-11
 ucynb_Ccell   <- mean(ucynb_Ccell_h,ucynb_Ccell_l)
 
-r_Ccell_h <- 1.09E-9
-r_Ccell_l <- 5.75E-10
+r_Ccell_h <- 2.56E-9
+r_Ccell_l <- 5.73E-11
 r_Ccell   <- mean(r_Ccell_h,r_Ccell_l)
 
 ###########################################################################
@@ -142,8 +143,8 @@ Ctot_h <- rC_h + tC_h + uaC_h + ubC_h
 
 zlims=c(0,1) 
 #pdf('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
-CairoPDF('~/dropbox/working/diazotrophs/plots/proportion_maps_high_low_04_16_2021.pdf',height=9,width=16)
-par(mfrow=c(4,4),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2),xpd=FALSE)
+CairoPDF('~/dropbox/working/diazotrophs/plots/proportion_maps_high_low_05_28_2021.pdf',height=9,width=16)
+par(mfrow=c(4,4),mar=c(2,2,2,5),cex.axis=0.8,oma=c(3,3,3,2),xpd=FALSE)
 image(x=lon,y=lat,cellr_l/celltot_l ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
   box()
   map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
@@ -203,6 +204,9 @@ image(x=lon,y=lat,ubC_l/Ctot_l,xlab='',ylab='',col=viridis(20),zlim=zlims);
 image(x=lon,y=lat,ubC_h/Ctot_h,xlab='',ylab='',col=viridis(20),zlim=zlims); 
   box()
   map(add=TRUE,fill=TRUE,resolution=1000,col='grey')  
+  
+mtext(outer=TRUE,side=2,'Latitude')
+mtext(outer=TRUE,side=1,'Longitude')
 dev.off()
 
 

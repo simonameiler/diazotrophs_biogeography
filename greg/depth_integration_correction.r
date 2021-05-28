@@ -9,11 +9,13 @@ dat <- read.csv('~/Dropbox/Working/DIAZOTROPHS/data/Tang_2019_CMAP_v4.csv')
 #                 ua=dat$UCYN.A1.nifH.Gene..x106.copies.m.3.,
 #                 ref=dat$SOURCE..Data)
 
+m3perliter <- 1/1000
+
 d <- data.frame(lat=dat$LATITUDE,lon=dat$LONGITUDE,depth=dat$DEPTH..m.,
-                r=dat$Richelia.nifH.Gene..copies.L.1.,
-                t=dat$Trichodesmium.nifH.Gene..copies.L.1.,
-                ub=dat$UCYN.B.nifH.Gene..copies.L.1.,
-                ua=as.numeric(dat$UCYN.A1.nifH.Gene..copies.L.1.),
+                r=dat$Richelia.nifH.Gene..copies.L.1. *m3perliter,
+                t=dat$Trichodesmium.nifH.Gene..copies.L.1. *m3perliter,
+                ub=dat$UCYN.B.nifH.Gene..copies.L.1. *m3perliter,
+                ua=as.numeric(dat$UCYN.A1.nifH.Gene..copies.L.1.) *m3perliter,
                 ref=dat$SOURCE..Data)
 
 d$latlon <- paste(d$lat,d$lon,sep='')
@@ -47,6 +49,6 @@ for(i in 1:N){
 #dff <- df[df$ref=="Goebel et al. (2010), doi:10.1111/j.1462-2920.2010.02303.x",]
 #plot(dff$lat,dff$ucyn_a)
 
-write.csv(file='~/dropbox/working/diazotrophs/data/correction_integrated_04_23_2021.csv',df,row.names=FALSE) 
+write.csv(file='~/dropbox/working/diazotrophs/data/correction_integrated_05_28_2021.csv',df,row.names=FALSE) 
 
   
