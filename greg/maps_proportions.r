@@ -51,7 +51,7 @@ ucyna_nifcell_l <- 0.49
 ucyna_nifcell   <- mean(c(ucyna_nifcell_h,ucyna_nifcell_l))
 
 ucynb_nifcell_h <- 3.6
-ucynb_nifcell_l <- 1
+ucynb_nifcell_l <- 3.6
 ucynb_nifcell   <- mean(c(ucynb_nifcell_h,ucynb_nifcell_l))
 
 r_nifcell_h <- 401.56
@@ -194,7 +194,7 @@ image(x=lon,y=lat,uaC_h/Ctot_h,xlab='',ylab='',col=viridis(20),zlim=zlims);
 image(x=lon,y=lat,cellub_l/celltot_l ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
   box()
   map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-  mtext('d) UCYN-A', adj=0,line=0.5)
+  mtext('d) UCYN-B', adj=0,line=0.5)
 image(x=lon,y=lat,cellub_h/celltot_h ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
   box()
   map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
@@ -216,48 +216,48 @@ dev.off()
 
 ###################################
 
-zlims=c(0,1) 
-#pdf('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
-CairoPDF('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
-par(mfrow=c(4,2),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2),xpd=FALSE)
-image(x=lon,y=lat,cellr/celltot ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	#image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
-	mtext('Richelia')
-	mtext('Proportion of Cellular Concentration',line=2)
-image(x=lon,y=lat,rC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	#image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
-	mtext('Richelia')
-	mtext('Proportion of Carbon Concentration',line=2)
-	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
-
-image(x=lon,y=lat,cellt/celltot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	mtext('Trichodesmium')
-image(x=lon,y=lat,tC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	mtext('Trichodesmium')
-image(x=lon,y=lat,cellua/celltot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	mtext('UCYN-A')
-image(x=lon,y=lat,uaC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	mtext('UCYN-A')
-
-image(x=lon,y=lat,cellub/celltot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	mtext('UCYN-B')
-image(x=lon,y=lat,ubC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
-	box()
-	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
-	mtext('UCYN-B')
-
-dev.off()
+# zlims=c(0,1) 
+# #pdf('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
+# CairoPDF('~/dropbox/working/diazotrophs/plots/mean_cell_04_01_2020.pdf',height=9,width=8.5)
+# par(mfrow=c(4,2),mar=c(2,2,2,5),cex.axis=0.8,oma=c(2,2,3,2),xpd=FALSE)
+# image(x=lon,y=lat,cellr/celltot ,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	#image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+# 	mtext('Richelia')
+# 	mtext('Proportion of Cellular Concentration',line=2)
+# image(x=lon,y=lat,rC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	#image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+# 	mtext('Richelia')
+# 	mtext('Proportion of Carbon Concentration',line=2)
+# 	image.plot(matrix(zlims),legend.only=TRUE,col=viridis(20))
+# 
+# image(x=lon,y=lat,cellt/celltot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	mtext('Trichodesmium')
+# image(x=lon,y=lat,tC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	mtext('Trichodesmium')
+# image(x=lon,y=lat,cellua/celltot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	mtext('UCYN-A')
+# image(x=lon,y=lat,uaC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	mtext('UCYN-A')
+# 
+# image(x=lon,y=lat,cellub/celltot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	mtext('UCYN-B')
+# image(x=lon,y=lat,ubC/Ctot,xlab='',ylab='',col=viridis(20),zlim=zlims); 
+# 	box()
+# 	map(add=TRUE,fill=TRUE,resolution=1000,col='grey')
+# 	mtext('UCYN-B')
+# 
+# dev.off()

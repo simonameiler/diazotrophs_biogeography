@@ -14,7 +14,7 @@ ucyna_nifcell_h <- 27.81
 ucyna_nifcell_l <- 0.49
   ucyna_nifcell   <- mean(c(ucyna_nifcell_h,ucyna_nifcell_l))
 ucynb_nifcell_h <- 3.6
-ucynb_nifcell_l <- 1
+ucynb_nifcell_l <- 3.6
   ucynb_nifcell   <- mean(c(ucynb_nifcell_h,ucynb_nifcell_l))
 r_nifcell_h <- 401.56
 r_nifcell_l <- 1.35
