@@ -68,11 +68,11 @@ xxx2_h <- ucynb_Ccell_h*xx2_l
 xxx3_h <- ucyna_Ccell_h*xx3_l
 xxx4_h <- t_Ccell_h*xx4_l
 
-par(mfrow=c(1,1))
-	plot(-999,ylim=c(1E-3,1E9),log='y',xlim=c(0,20))
-	lines(dd$LATITUDE,x1+x2+x3+x4)
-	lines(dd$LATITUDE,xx1+xx2+xx3+xx4)
-	lines(dd$LATITUDE,xxx1+xxx2+xxx3+xxx4)
+# par(mfrow=c(1,1))
+# 	plot(-999,ylim=c(1E-3,1E9),log='y',xlim=c(0,20))
+# 	lines(dd$LATITUDE,x1+x2+x3+x4)
+# 	lines(dd$LATITUDE,xx1+xx2+xx3+xx4)
+# 	lines(dd$LATITUDE,xxx1+xxx2+xxx3+xxx4)
 
 
 sumnif <- x1+x2+x3+x4
@@ -87,9 +87,9 @@ sumbio <- xxx1+xxx2+xxx3+xxx4
 # 
 # areaplot(x,y)
 
-pdf('~/dropbox/working/diazotrophs/plots/diazotroph_gradients_10_14_2021.pdf',height=6,width=10)
+pdf('~/dropbox/working/diazotrophs/plots/diazotroph_gradients_11_09_2021.pdf',height=6,width=10)
 #par(mfrow=c(2,3),mar=c(2,2,2,2),oma=c(2,2,2,5),xpd=TRUE)
-par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE,family = 'Arial')
+par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE)
 	plot(-999,ylim=c(1E-3,1E6),log='y',xlim=c(0,20),las=1,ylab='')
 	#lines(dd$lat,xx1_h+xx2_h+xx3_h+xx4_h,lwd=2)
 	lines(dd$lat,(1/r_nifcell_h)*(dd$richelia+1),col='orange',lty=1)
@@ -99,7 +99,7 @@ par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE,family = 'Arial')
 		mtext(side=2,expression('Cells [cells/m'^2*']'),line=3.5)
 		# legend('topleft',legend=c('Total','Richelia','UCYN A','UCYN B','Trichodesmium'),lty=c(1,2,2,2,2),lwd=c(2,1,1,1,1),
 		#        col=c('black','orange','blue','red','dark green'),bty='n',cex=0.7)
-		legend('topleft',legend=c('Richelia','UCYN A','UCYN B','Trichodesmium'),lty=1,lwd=1,
+		legend('topleft',legend=c(expression(italic('Richelia')),'UCYN-A','UCYN-B',expression(italic('Trichodesmium'))),lty=1,lwd=1,
 		       col=c('orange','blue','red','dark green'),bty='n',cex=0.7)
 		mtext(adj=0,'a)')
 
@@ -132,58 +132,61 @@ par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE,family = 'Arial')
 dev.off()
 
 
+###########################################################################
+##--GRADIENT PLOT AS PROPORTIONS--#########################################
+###########################################################################
 
-pdf('~/dropbox/working/diazotrophs/plots/diazotroph_gradients_05_28_2021.pdf',height=6,width=10)
-#par(mfrow=c(2,3),mar=c(2,2,2,2),oma=c(2,2,2,5),xpd=TRUE)
-par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE)
-
-tot <- xx1_h+xx2_h+xx3_h+xx4_h
-#plot(-999,ylim=c(1E-3,1E6),log='y',xlim=c(0,20),las=1,ylab='')
-plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
-#lines(dd$lat,xx1_h+xx2_h+xx3_h+xx4_h,lwd=2)
-lines(dd$lat,(1/r_nifcell_h)*(dd$richelia+1)/tot*100,col='orange',lty=2)
-lines(dd$lat,(1/ucynb_nifcell_h)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
-lines(dd$lat,(1/ucyna_nifcell_h)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
-lines(dd$lat,(1/t_nifcell_h)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
-#mtext(side=2,expression('Cells [cells/m'^2*']'),line=3.5)
-mtext(side=2,expression('Proportion of Cells'),line=3.5)
-legend('topleft',legend=c('Total','Richelia','UCYN A','UCYN B','Trichodesmium'),lty=c(1,2,2,2,2),lwd=c(2,1,1,1,1),
-       col=c('black','orange','blue','red','dark green'),bty='n',cex=0.7)
-mtext(adj=0,'a)')
-
-tot <- xx1_l+xx2_l+xx3_l+xx4_l
-#plot(-999,ylim=c(1E-3,1E6),log='y',xlim=c(0,20),las=1,ylab='')
-plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
-#lines(dd$lat,xx1_l+xx2_l+xx3_l+xx4_l,lwd=2)
-lines(dd$lat,(1/r_nifcell_l)*(dd$richelia+1)/tot*100,col='orange',lty=2)
-lines(dd$lat,(1/ucynb_nifcell_l)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
-lines(dd$lat,(1/ucyna_nifcell_l)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
-lines(dd$lat,(1/t_nifcell_l)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
-mtext(adj=0,'b)')
-
-tot <- xxx1_l+xxx2_l+xxx3_l+xxx4_l		
-#plot(-999,ylim=c(1E-13,1E-3),log='y',xlim=c(0,20),las=1,ylab='')
-plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
-#lines(dd$lat,xxx1_l+xxx2_l+xxx3_l+xxx4_l,lwd=2)
-lines(dd$lat,(1/r_nifcell_h)*(r_Ccell_l)*(dd$richelia+1)/tot*100,col='orange',lty=2)
-lines(dd$lat,(1/ucynb_nifcell_h)*(ucynb_Ccell_l)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
-lines(dd$lat,(1/ucyna_nifcell_h)*(ucyna_Ccell_l)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
-lines(dd$lat,(1/t_nifcell_h)*(t_Ccell_l)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
-mtext(side=2,expression('Carbon [mmol/m'^2*']'),line=3.5)
-mtext(adj=0,'c)')
-
-tot <- xxx1_h+xxx2_h+xxx3_h+xxx4_h
-#plot(-999,ylim=c(1E-13,1E-3),log='y',xlim=c(0,20),las=1,ylab='')
-plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
-#lines(dd$lat,xxx1_h+xxx2_h+xxx3_h+xxx4_h,lwd=2)
-lines(dd$lat,(1/r_nifcell_l)*(r_Ccell_h)*(dd$richelia+1)/tot*100,col='orange',lty=2)
-lines(dd$lat,(1/ucynb_nifcell_l)*(ucynb_Ccell_h)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
-lines(dd$lat,(1/ucyna_nifcell_l)*(ucyna_Ccell_h)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
-lines(dd$lat,(1/t_nifcell_l)*(t_Ccell_h)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
-mtext(side=1,outer=TRUE,expression('Latitude ('*degree*'N)'),line=0.5)
-mtext(adj=0,'d)')
-
-dev.off()
+# pdf('~/dropbox/working/diazotrophs/plots/diazotroph_gradients_05_28_2021.pdf',height=6,width=10)
+# #par(mfrow=c(2,3),mar=c(2,2,2,2),oma=c(2,2,2,5),xpd=TRUE)
+# par(mfrow=c(2,2),mar=c(2,2,2,2),oma=c(3,3,3,5),xpd=TRUE)
+# 
+# tot <- xx1_h+xx2_h+xx3_h+xx4_h
+# #plot(-999,ylim=c(1E-3,1E6),log='y',xlim=c(0,20),las=1,ylab='')
+# plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
+# #lines(dd$lat,xx1_h+xx2_h+xx3_h+xx4_h,lwd=2)
+# lines(dd$lat,(1/r_nifcell_h)*(dd$richelia+1)/tot*100,col='orange',lty=2)
+# lines(dd$lat,(1/ucynb_nifcell_h)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
+# lines(dd$lat,(1/ucyna_nifcell_h)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
+# lines(dd$lat,(1/t_nifcell_h)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
+# #mtext(side=2,expression('Cells [cells/m'^2*']'),line=3.5)
+# mtext(side=2,expression('Proportion of Cells'),line=3.5)
+# legend('topleft',legend=c('Total','Richelia','UCYN A','UCYN B','Trichodesmium'),lty=c(1,2,2,2,2),lwd=c(2,1,1,1,1),
+#        col=c('black','orange','blue','red','dark green'),bty='n',cex=0.7)
+# mtext(adj=0,'a)')
+# 
+# tot <- xx1_l+xx2_l+xx3_l+xx4_l
+# #plot(-999,ylim=c(1E-3,1E6),log='y',xlim=c(0,20),las=1,ylab='')
+# plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
+# #lines(dd$lat,xx1_l+xx2_l+xx3_l+xx4_l,lwd=2)
+# lines(dd$lat,(1/r_nifcell_l)*(dd$richelia+1)/tot*100,col='orange',lty=2)
+# lines(dd$lat,(1/ucynb_nifcell_l)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
+# lines(dd$lat,(1/ucyna_nifcell_l)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
+# lines(dd$lat,(1/t_nifcell_l)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
+# mtext(adj=0,'b)')
+# 
+# tot <- xxx1_l+xxx2_l+xxx3_l+xxx4_l		
+# #plot(-999,ylim=c(1E-13,1E-3),log='y',xlim=c(0,20),las=1,ylab='')
+# plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
+# #lines(dd$lat,xxx1_l+xxx2_l+xxx3_l+xxx4_l,lwd=2)
+# lines(dd$lat,(1/r_nifcell_h)*(r_Ccell_l)*(dd$richelia+1)/tot*100,col='orange',lty=2)
+# lines(dd$lat,(1/ucynb_nifcell_h)*(ucynb_Ccell_l)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
+# lines(dd$lat,(1/ucyna_nifcell_h)*(ucyna_Ccell_l)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
+# lines(dd$lat,(1/t_nifcell_h)*(t_Ccell_l)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
+# mtext(side=2,expression('Carbon [mmol/m'^2*']'),line=3.5)
+# mtext(adj=0,'c)')
+# 
+# tot <- xxx1_h+xxx2_h+xxx3_h+xxx4_h
+# #plot(-999,ylim=c(1E-13,1E-3),log='y',xlim=c(0,20),las=1,ylab='')
+# plot(-999,ylim=c(0,100),xlim=c(0,20),las=1,ylab='')
+# #lines(dd$lat,xxx1_h+xxx2_h+xxx3_h+xxx4_h,lwd=2)
+# lines(dd$lat,(1/r_nifcell_l)*(r_Ccell_h)*(dd$richelia+1)/tot*100,col='orange',lty=2)
+# lines(dd$lat,(1/ucynb_nifcell_l)*(ucynb_Ccell_h)*(dd$ucyn_b+1)/tot*100,col='red',lty=2)
+# lines(dd$lat,(1/ucyna_nifcell_l)*(ucyna_Ccell_h)*(dd$ucyn_a+1)/tot*100,col='blue',lty=2)
+# lines(dd$lat,(1/t_nifcell_l)*(t_Ccell_h)*(dd$trichodesmium+1)/tot*100,col='dark green',lty=2)
+# mtext(side=1,outer=TRUE,expression('Latitude ('*degree*'N)'),line=0.5)
+# mtext(adj=0,'d)')
+# 
+# dev.off()
 
 
 
